@@ -47,6 +47,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .fs,.fi,.fta{width:100%;padding:8px 11px;border:.5px solid var(--bdr2);border-radius:var(--rs);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--tx);background:var(--sur);appearance:none;transition:border-color .15s}
 .fs:focus,.fi:focus,.fta:focus{outline:none;border-color:var(--ac)}
 .fs:disabled{opacity:.4;cursor:not-allowed}
+select option{white-space:normal;word-break:break-word}
 .fta{resize:vertical;min-height:70px}
 .tc{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .amap{background:var(--sur2);border:.5px solid var(--bdr);border-radius:var(--r);padding:14px 16px;margin-top:16px}
@@ -104,6 +105,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .ib{background:var(--blb);border:.5px solid #c0d0e8;border-radius:var(--rs);padding:10px 13px;font-size:11px;color:var(--bl);margin-bottom:14px}
 .wb{background:var(--amb);border:.5px solid #e0c888;border-radius:var(--rs);padding:10px 13px;font-size:11px;color:var(--am);margin-bottom:12px}
 .seq{display:flex;align-items:center;gap:0;margin:8px 0;flex-wrap:wrap}
+.sc-sub{font-size:10px;color:var(--tx3);margin-top:1px}
 .ss{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:500;background:var(--sur2);color:var(--tx3);border:.5px solid var(--bdr)}
 .ss.act{background:var(--amb);color:var(--am);border-color:#e8c870}
 .ss.don{background:var(--grb);color:var(--gr);border-color:#90d0a8}
@@ -120,6 +122,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:500;margin-top:4px;margin-right:2px}
 .tl1{background:#f0e8fa;color:#4a1a7a}.tl2{background:#e8eef8;color:#1a3a6b}.tl3{background:#e6f2eb;color:#1a5c3a}.tl4{background:#fdf3e0;color:#7a4f00}.tl5{background:#fbe8e8;color:#7a1e1e}
 .pt{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.ehmo{display:none;position:fixed;inset:0;background:rgba(26,25,22,.6);z-index:200;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-y:auto}
+.ehmo.open{display:flex}
+.ehmd{background:var(--sur);border-radius:var(--r);width:100%;max-width:620px;padding:20px 22px;position:relative;max-height:85vh;overflow-y:auto}
+.eh-entry{padding:8px 10px;background:var(--sur2);border-radius:var(--rs);margin-bottom:6px;border:.5px solid var(--bdr)}
+.eh-sent{border-left:3px solid var(--bl)}
+.eh-reply{border-left:3px solid var(--gr)}
+.eh-file{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--sur);border:.5px solid var(--bdr2);border-radius:20px;font-size:10px;color:var(--bl);cursor:pointer;margin:2px}
+.eh-file:hover{background:var(--blb)}
+.carry-banner{background:var(--amb);border:.5px solid #e0c888;border-radius:var(--rs);padding:8px 10px;font-size:10px;color:var(--am);margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -159,11 +170,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
-      <div class="ph"><h2 id="greet">Dashboard</h2><p>Delegation of Authority — approval tracking</p></div>
+      <div class="ph">
+        <h2 id="greet">Dashboard</h2><p>Delegation of Authority — approval tracking</p>
+      </div>
       <div class="stats">
-        <div class="sc"><div class="sl">My open requests</div><div class="sv" id="st1">0</div><div class="ss">Submitted by me</div></div>
-        <div class="sc"><div class="sl">Pending approvals</div><div class="sv" id="st2" style="color:var(--am)">0</div><div class="ss">Awaiting response</div></div>
-        <div class="sc"><div class="sl">Completed</div><div class="sv" id="st4" style="color:var(--gr)">0</div><div class="ss">Fully approved</div></div>
+        <div class="sc"><div class="sl">My open requests</div><div class="sv" id="st1">0</div><div class="sc-sub">Submitted by me</div></div>
+        <div class="sc"><div class="sl">Pending approvals</div><div class="sv" id="st2" style="color:var(--am)">0</div><div class="sc-sub">Awaiting response</div></div>
+        <div class="sc"><div class="sl">Completed</div><div class="sv" id="st4" style="color:var(--gr)">0</div><div class="sc-sub">Fully approved</div></div>
       </div>
       <div class="ib">💡 <strong>How it works:</strong> Submit a request → system shows required approvers by level → send Level 5 emails first → only after Level 5 is fully approved do Level 4 emails unlock → track each response here.</div>
       <div class="pt">Recent activity</div>
@@ -174,14 +187,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="page" id="page-new">
       <div class="ph"><h2>New DOA Request</h2><p>Select your action — required approvers appear automatically</p></div>
       <div class="fc">
-        <div class="tc">
-          <div class="fr"><label class="fl">Your name</label><input class="fi" id="rname"/></div>
-          <div class="fr"><label class="fl">Your email</label><input class="fi" id="remail"/></div>
-        </div>
-        <div class="fr"><label class="fl">Country / entity <span style="color:var(--tx3);font-weight:400">(for Scope approvals)</span></label>
-          <select class="fs" id="rcountry"><option value="">Select country</option><option>Singapore</option><option>China</option><option>Hong Kong</option><option>Taiwan</option><option>Korea</option><option>Japan</option><option>Indonesia</option><option>North America</option><option>Canada</option><option>India</option><option>Sri Lanka</option><option>Thailand</option><option>Cambodia</option><option>Philippines</option><option>Vietnam</option><option>Malaysia</option><option>Bangladesh</option><option>Australia</option><option>Myanmar</option><option>Brunei</option><option>Group</option></select>
-        </div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:14px">Submitting as <strong id="req-as-name">—</strong> · <span id="req-as-email" style="color:var(--tx3)"></span> · <span id="req-as-country" style="color:var(--tx3)"></span></div>
         <div class="dvd"></div>
+        <div class="fr"><label class="fl">Request title <span style="color:var(--tx3);font-weight:400">(short label to identify this request)</span></label><input class="fi" id="rtitle" placeholder="e.g. Singapore — Q3 CAPEX Equipment Purchase"/></div>
         <div class="fr"><label class="fl">Product / Function Scope</label>
           <select class="fs" id="sscope" onchange="onScope()">
             <option value="">Select scope</option>
@@ -215,7 +223,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 
     <!-- MY REQUESTS -->
     <div class="page" id="page-reqs">
-      <div class="ph"><h2>My Requests</h2><p>All DOA requests you have submitted</p></div>
+      <div class="ph" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div><h2>My Requests</h2><p>All DOA requests you have submitted</p></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap">
+          <button class="btn" id="export-select-btn" onclick="toggleExportMode()" style="font-size:11px;border-color:var(--bl);color:var(--bl)">☐ Export</button>
+          <button class="btn btn-p" id="export-confirm-btn" onclick="exportSelectedPDF()" style="display:none;font-size:11px">⬇ Export Selected</button>
+          <button class="btn" id="export-cancel-btn" onclick="cancelExportMode()" style="display:none;font-size:11px">Cancel</button>
+          <span id="export-count-label" style="display:none;font-size:10px;color:var(--tx3)">0 selected</span>
+        </div>
+      </div>
       <div id="reqs-list"></div>
     </div>
 
@@ -227,6 +243,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
         <select class="fsel" onchange="fMtxA(this.value)"><option value="">All areas</option><option>HR</option><option>Finance</option><option>Procurement</option><option>Technology</option><option>Legal &amp; Compliance</option><option>Customer Contracts</option></select>
         <select class="fsel" onchange="fMtxT(this.value)"><option value="">All types</option><option>Approval</option><option>Scope Approval</option><option>Inform</option><option>Scope Inform</option><option>Inform &amp; Consult</option><option>Scope Inform &amp; Consult</option></select>
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:10px 12px;background:var(--sur2);border:.5px solid var(--bdr);border-radius:var(--rs)">
+        <span style="font-size:10px;font-weight:600;color:var(--tx3);align-self:center;margin-right:4px;text-transform:uppercase;letter-spacing:.05em">Admin:</span>
+        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--bl);color:var(--bl)" onclick="mtxAdmin('create-logic')">＋ Create Approval Logic</button>
+        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--gr);color:var(--gr)" onclick="mtxAdmin('update-logic')">✎ Update Approval Logic</button>
+        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--rd);color:var(--rd)" onclick="mtxAdmin('remove-logic')">✕ Remove Approval Logic</button>
+        <div style="width:.5px;background:var(--bdr2);margin:0 3px;align-self:stretch"></div>
+        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--bl);color:var(--bl)" onclick="mtxAdmin('create-contact')">＋ Create Contact</button>
+        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--gr);color:var(--gr)" onclick="mtxAdmin('update-contact')">✎ Update Contact</button>
+        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--rd);color:var(--rd)" onclick="mtxAdmin('remove-contact')">✕ Remove Contact</button>
+      </div>
+      <!-- Matrix admin panel -->
+      <div id="mtx-admin-panel" style="display:none;background:var(--sur);border:.5px solid var(--bdr2);border-radius:var(--r);padding:16px 18px;margin-bottom:16px"></div>
       <div style="overflow-x:auto"><table class="mtbl"><thead><tr><th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th>Level</th><th>Role</th><th>Type</th></tr></thead><tbody id="mtbl-body"></tbody></table></div>
     </div>
 
@@ -239,6 +267,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
   </main>
 </div>
 <div class="mo" id="mo" onclick="closeMoBg(event)"><div class="md" id="md"><button class="mc" onclick="closeMo()">✕</button><div id="mb"></div></div></div>
+<div class="ehmo" id="ehmo" onclick="closeEhBg(event)"><div class="ehmd" id="ehmd"><button class="mc" onclick="closeEh()">✕</button><div id="ehmb"></div></div></div>
 <div class="toast" id="toast"></div>
 <script>
 const DOA=[
@@ -11707,17 +11736,18 @@ const CONS=[
 // ── HELPERS ──
 const isInf=t=>['Inform','Scope Inform','Inform & Consult','Scope Inform & Consult'].includes(t);
 const isApv=t=>!isInf(t);
+function getMref(r){if(r.mref)return r.mref;const ini=(r.sb||'?').trim().split(/\s+/).map(x=>x[0]).join('').substring(0,3).toUpperCase()||'X';return 'DOA-'+ini+'-'+String(r.id||'').replace(/\D/g,'').slice(-3);}
 let me=JSON.parse(localStorage.getItem('doa_me')||'null');
 let reqs=JSON.parse(localStorage.getItem('doa_reqs')||'[]');
 let mf={s:'',a:'',t:''};let rf={s:'',st:''};
 function ini(n){return(n||'?').split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase()}
-function now(){return new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+function now(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function save(){localStorage.setItem('doa_reqs',JSON.stringify(reqs))}
 function tc(t){if(t==='Approval')return 'bb';if(t==='Scope Approval')return 'bp';if(t==='Inform'||t==='Scope Inform')return 'bgr';return 'bw'}
-function getCon(role,country){if(country){const c=CONS.find(x=>x.r===role&&x.co===country);if(c)return c}return CONS.find(x=>x.r===role)||{n:role,e:'unknown@benline.com'}}
+function getCon(role,country){const allC=getCONS();if(country){const c=allC.find(x=>x.r===role&&x.co===country);if(c)return c}return allC.find(x=>x.r===role)||{n:role,e:'unknown@benline.com'}}
 function getActiveLv(req){
   const lvs=[...new Set(req.apvs.filter(a=>isApv(a.t)).map(a=>a.lv))].sort((a,b)=>b-a);
-  for(const lv of lvs){const at=req.apvs.filter(a=>a.lv===lv&&isApv(a.t));if(!at.every(a=>a.st==='Approved'||a.st==='Rejected'))return lv}
+  for(const lv of lvs){const at=req.apvs.filter(a=>a.lv===lv&&isApv(a.t));if(!at.every(a=>a.st==='Approved'||a.st==='Rejected'||a.st==='N.A'))return lv}
   return null
 }
 function doLogin(){
@@ -11731,9 +11761,9 @@ function initApp(){
   document.getElementById('suname').textContent=me.n;
   document.getElementById('suemail').textContent=me.e;
   document.getElementById('greet').textContent='Good day, '+me.n.split(' ')[0];
-  document.getElementById('rname').value=me.n;
-  document.getElementById('remail').value=me.e;
-  if(me.co)document.getElementById('rcountry').value=me.co;
+  document.getElementById('req-as-name').textContent=me.n;
+  document.getElementById('req-as-email').textContent=me.e;
+  document.getElementById('req-as-country').textContent=me.co||'No country set';
   renderAll();
 }
 window.onload=()=>{if(me)initApp()};
@@ -11756,7 +11786,7 @@ function onScope(){
   document.getElementById('ssub').disabled=true;
   document.getElementById('amap').style.display='none';
   if(!scope)return;
-  const areas=[...new Set(DOA.filter(r=>r.sc===scope).map(r=>r.a))].sort();
+  const areas=[...new Set(getDOA().filter(r=>r.sc===scope).map(r=>r.a))].sort();
   areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;s.appendChild(o)});
 }
 function onArea(){
@@ -11767,7 +11797,7 @@ function onArea(){
   document.getElementById('ssub').innerHTML='<option value="">Select sub-category</option>';document.getElementById('ssub').disabled=true;
   document.getElementById('amap').style.display='none';
   if(!area)return;
-  const cats=[...new Set(DOA.filter(r=>r.sc===scope&&r.a===area).map(r=>r.c))].sort();
+  const cats=[...new Set(getDOA().filter(r=>r.sc===scope&&r.a===area).map(r=>r.c))].sort();
   cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cs.appendChild(o)});
 }
 function onCat(){
@@ -11777,14 +11807,14 @@ function onCat(){
   ss.innerHTML='<option value="">Select sub-category / action</option>';ss.disabled=!cat;
   document.getElementById('amap').style.display='none';
   if(!cat)return;
-  const subs=[...new Set(DOA.filter(r=>r.sc===scope&&r.a===area&&r.c===cat).map(r=>r.s))].sort();
+  const subs=[...new Set(getDOA().filter(r=>r.sc===scope&&r.a===area&&r.c===cat).map(r=>r.s))].sort();
   subs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o)});
 }
 function onSub(){
   const scope=document.getElementById('sscope').value;
   const area=document.getElementById('sarea').value,cat=document.getElementById('scat').value,sub=document.getElementById('ssub').value;
   const md=document.getElementById('amap');if(!sub){md.style.display='none';return}
-  const rules=DOA.filter(r=>r.sc===scope&&r.a===area&&r.c===cat&&r.s===sub);if(!rules.length){md.style.display='none';return}
+  const rules=getDOA().filter(r=>r.sc===scope&&r.a===area&&r.c===cat&&r.s===sub);if(!rules.length){md.style.display='none';return}
   md.style.display='block';
   const byLv={};rules.forEach(r=>{byLv[r.lv]=byLv[r.lv]||[];byLv[r.lv].push(r)});
   const lvN={1:'Level 1 — Board',2:'Level 2 — Executive',3:'Level 3 — Product (MAS/Liner/Logistics)',4:'Level 4 — Functions',5:'Level 5 — Country'};
@@ -11793,8 +11823,8 @@ function onSub(){
     const rows=byLv[lv],hasA=rows.some(r=>isApv(r.t));
     html+=`<div class="lg"><div class="ll"><span class="badge bgr" style="font-size:9px">L${lv}</span>${lvN[lv]||'Level '+lv} ${hasA?'<span class="badge bb" style="font-size:8px">APPROVAL REQUIRED</span>':'<span class="badge bw" style="font-size:8px">INFORM ONLY</span>'}</div>`;
     rows.forEach(r=>{
-      const co=getCon(r.r,document.getElementById('rcountry').value);
-      html+=`<div class="ar"><div><div style="font-size:11px;font-weight:500">${r.r}${co.n&&co.n!==r.r?` <span style="color:var(--tx3);font-weight:400;font-size:10px">(${co.n})</span>`:''}</div><div style="font-size:10px;color:var(--tx3)">✉ ${co.e||''}</div></div><span class="badge ${tc(r.t)}">${r.t}</span></div>`;
+      const co=getCon(r.r,me?.co||'');
+      html+=`<div class="ar"><div><div style="font-size:11px;font-weight:500">${r.r}${co.n&&co.n!==r.r?` <span style="color:var(--tx3);font-weight:400;font-size:10px">(${co.n})</span>`:''}</div><div style="font-size:12px;color:var(--tx3)">${co.e||''}</div></div><span class="badge ${tc(r.t)}">${r.t}</span></div>`;
     });
     html+='</div>';
   });
@@ -11802,23 +11832,30 @@ function onSub(){
 }
 
 function submitReq(){
-  const n=document.getElementById('rname').value.trim()||me.n;
-  const e=document.getElementById('remail').value.trim()||me.e;
-  const co=document.getElementById('rcountry').value;
+  const n=me.n,e=me.e,co=me.co||'';
   const scope=document.getElementById('sscope').value;
   const area=document.getElementById('sarea').value,cat=document.getElementById('scat').value,sub=document.getElementById('ssub').value;
   const purpose=document.getElementById('rpurpose').value.trim();
-  if(!area||!cat||!sub){showT('Please complete all selections');return}
+  const titleRaw=document.getElementById('rtitle').value.trim();
+  if(!scope||!area||!cat||!sub){showT('Please complete all selections');return}
   if(!purpose){showT('Please add a purpose / justification');return}
-  const rules=DOA.filter(r=>r.sc===scope&&r.a===area&&r.c===cat&&r.s===sub);
+  const title=titleRaw||sub;
+  const rules=getDOA().filter(r=>r.sc===scope&&r.a===area&&r.c===cat&&r.s===sub);
   const apvs=rules.map(r=>{const c=getCon(r.r,co);return{lv:r.lv,r:r.r,t:r.t,n:c.n,re:c.e,st:'Pending',sent:false,at:null,cm:''}});
-  const req={id:'R'+Date.now(),sb:n,se:e,co,scope,area,cat,sub,purpose,apvs,status:'In Progress',dt:now(),notes:[]};
+  const _ts=Date.now();
+  const _initials=(n||'?').trim().split(/\s+/).map(x=>x[0]).join('').substring(0,3).toUpperCase()||'X';
+  // simple running sequence per browser: DOA-<INITIALS>-001, 002, ...
+  let _seq=parseInt(localStorage.getItem('doa_seq')||'0')+1;
+  localStorage.setItem('doa_seq',String(_seq));
+  const _mref='DOA-'+_initials+'-'+String(_seq).padStart(3,'0');
+  const req={id:'R'+_ts,mref:_mref,sub:title,sb:n,se:e,co,scope,area,cat,action:sub,purpose,apvs,status:'In Progress',dt:now(),notes:[]};
   reqs.unshift(req);save();clearForm();renderAll();
   showT('Request submitted successfully');
-  document.querySelectorAll('.ni')[2].classList.add('active');go('reqs');
+  go('reqs',document.querySelectorAll('.ni')[2]);
   setTimeout(()=>openModal(req.id),200);
 }
 function clearForm(){
+  document.getElementById('rtitle').value='';
   document.getElementById('sscope').value='';
   document.getElementById('sarea').innerHTML='<option value="">— select scope first —</option>';
   document.getElementById('sarea').disabled=true;
@@ -11843,19 +11880,32 @@ function renderDash(){
 }
 function rrow(r){
   const apvs=r.apvs.filter(a=>isApv(a.t));
-  const dn=apvs.filter(a=>a.st==='Approved').length;
+  const naApvs=apvs.filter(a=>a.st==='N.A');
+  const activeApvs=apvs.filter(a=>a.st!=='N.A');
+  const dn=activeApvs.filter(a=>a.st==='Approved').length;
+  const total=activeApvs.length;
+  // N.A is "skip" not "stopped" — only hard Rejected stops
   const isRej=r.status==='Rejected'||apvs.some(a=>a.st==='Rejected');
-  const pct=apvs.length?Math.round(dn/apvs.length*100):0;
+  const pct=total?Math.round(dn/total*100):0;
   const alv=getActiveLv(r);
   const bc=r.status==='Approved'?'bg':r.status==='Rejected'?'br':'bw';
-  const barColor=isRej?'#c0392b':r.status==='Approved'?'var(--gr)':'var(--gr)';
+  const barColor=r.status==='Rejected'?'#c0392b':r.status==='Approved'?'var(--gr)':'var(--gr)';
   const rejNote=isRej?`<div style="font-size:10px;color:var(--rd);margin-top:3px;font-weight:500">Rejected — process stopped</div>`:'';
+  // export mode: show checkbox, click selects rather than opens modal
+  if(exportMode){
+    const checked=exportSelected.has(r.id);
+    return `<div class="rrow" onclick="toggleExportSelect('${r.id}')" style="cursor:pointer;${checked?'border-color:var(--ac);background:var(--acl)':''}">
+      <div class="rt"><input type="checkbox" id="export-cb-${r.id}" ${checked?'checked':''} onclick="event.stopPropagation();toggleExportSelect('${r.id}')" style="margin-right:8px;cursor:pointer;flex-shrink:0"><span class="rtitle">${r.sub}</span><span class="badge ${bc}">${r.status}</span>${alv?`<span class="badge bgr" style="font-size:9px">Active L${alv}</span>`:''}</div>
+      <div class="rm">${getMref(r)} · ${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · ${r.dt} · ${r.sb}</div>
+      <div class="pb"><div class="pf" style="width:${pct}%;background:${barColor}"></div></div>
+    </div>`;
+  }
   return `<div class="rrow" onclick="openModal('${r.id}')">
     <div class="rt"><span class="rtitle">${r.sub}</span><span class="badge ${bc}">${r.status}</span>${alv?`<span class="badge bgr" style="font-size:9px">Active L${alv}</span>`:''}</div>
-    <div class="rm">${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · ${r.dt} · ${r.sb}</div>
+    <div class="rm">${getMref(r)} · ${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · ${r.dt} · ${r.sb}</div>
     <div class="pb"><div class="pf" style="width:${pct}%;background:${barColor}"></div></div>
     ${rejNote}
-    ${!isRej?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${dn}/${apvs.length} approvals · ${apvs.filter(a=>a.st==='Pending').length} pending</div>`:''}
+    ${!isRej?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${dn}/${total} approvals · ${activeApvs.filter(a=>a.st==='Pending').length} pending${naApvs.length?` · ${naApvs.length} N.A (skipped)`:''}</div>`:''}
   </div>`;
 }
 function renderReqs(){
@@ -11872,8 +11922,8 @@ function openModal(id){
   const apvLvs=[...new Set(r.apvs.filter(a=>isApv(a.t)).map(a=>a.lv))].sort((a,b)=>b-a);
   const seqH=apvLvs.map((lv,i)=>{
     const at=r.apvs.filter(a=>a.lv===lv&&isApv(a.t));
-    const dn=at.every(a=>a.st==='Approved'),rj=at.some(a=>a.st==='Rejected');
-    return `${i>0?'<span class="sa">→</span>':''}<span class="ss ${rj?'rej':dn?'don':lv===alv?'act':''}">L${lv} ${rj?'✗':dn?'✓':lv===alv?'▶':'⏳'}</span>`;
+    const dn=at.every(a=>a.st==='Approved'),rj=at.some(a=>a.st==='Rejected'),na=at.some(a=>a.st==='N.A')&&!at.some(a=>a.st==='Rejected');
+    return `${i>0?'<span class="sa">→</span>':''}<span class="ss ${rj?'rej':na?'rej':dn?'don':lv===alv?'act':''}">L${lv} ${rj?'✗':na?'N.A':dn?'✓':lv===alv?'▶':'⏳'}</span>`;
   }).join('');
   const isSubmitter2=r.sb===me?.n||r.se===me?.e;
   let lvH='';
@@ -11882,99 +11932,124 @@ function openModal(id){
     const apR=rows.filter(a=>isApv(a.t)),inR=rows.filter(a=>isInf(a.t));
     const isSubmitter=r.sb===me?.n||r.se===me?.e;
     const isLk=apvLvs.includes(lvN2)&&alv!==null&&lvN2<alv;
-    const isAct=apR.length>0&&(r.status==='In Progress'||r.status==='Rejected')&&!isLk;
-    const lvDn=apR.length&&apR.every(a=>a.st==='Approved'||a.st==='Rejected');
-    const lvRj=apR.some(a=>a.st==='Rejected');
+    const isAct=apR.length>0&&(r.status==='In Progress'||r.status==='Rejected'||r.status==='N.A')&&!isLk;
+    const lvDn=apR.length&&apR.every(a=>a.st==='Approved'||a.st==='Rejected'||a.st==='N.A');
+    const lvRj=apR.some(a=>a.st==='Rejected'||a.st==='N.A');
     if(apR.length){
-      lvH+=`<div class="ml"><div class="mlh"><span class="badge ${lvRj?'br':lvDn?'bg':isAct?'bw':'bgr'}" style="font-size:9px">L${lv}</span>${lvN[lv]||'L'+lv}${isLk?` <span style="font-size:9px;color:var(--tx3)">🔒 Locked — Level ${lvN2+1} must complete first</span>`:''}${isAct&&!lvDn?' <span style="font-size:9px;color:var(--am)">▶ Active — send emails now</span>':''}</div>`;
+      lvH+=`<div class="ml"><div class="mlh"><span class="badge ${lvRj?'br':lvDn?'bg':isAct?'bw':'bgr'}" style="font-size:11px">L${lv}</span>${lvN[lv]||'L'+lv}${isLk?` <span style="font-size:11px;color:var(--tx3)">Locked — Level ${lvN2+1} must complete first</span>`:''}${isAct&&!lvDn?' <span style="font-size:11px;color:var(--am)">Active — send emails now</span>':''}</div>`;
       apR.forEach(a=>{
-        const sc=a.st==='Approved'?'bg':a.st==='Rejected'?'br':a.st==='Blocked'?'bgr':a.st==='Email Sent'?'bt':'bgr';
-        lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:10px;font-weight:400">(${a.n})</span>`:''}</div><div class="mae">✉ ${a.re}</div>${a.cm?`<div style="font-size:10px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">💬 ${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${a.st}</span>${(isAct||isSubmitter)&&alv===lvN2&&r.status==='In Progress'&&a.st==='Pending'?`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}')">✉ Send</button>`:''} ${a.st==='Email Sent'&&r.status==='In Progress'&&a.st!=='Blocked'?`<button class="btn" style="padding:3px 8px;font-size:10px;border-color:#7a4f00;color:var(--am)" onclick="sendReminder('${id}','${a.r}')">↩ Remind</button>`:''}${isAct&&a.st!=='Blocked'?`
-        <button class="btn btn-ok btn-sm ${a.st==='Approved'?'selected':''}" onclick="decide('${id}','${a.r}','Approved')" style="padding:3px 9px;font-size:10px">${a.st==='Approved'?'✓ Approved':'✓ Approve'}</button>
-        <button class="btn btn-no btn-sm ${a.st==='Rejected'?'selected':''}" onclick="decide('${id}','${a.r}','Rejected')" style="padding:3px 9px;font-size:10px">${a.st==='Rejected'?'✗ Rejected':'✗ Reject'}</button>
-      `:''}</div></div>`;
+        const sc=a.st==='Approved'?'bg':a.st==='Rejected'?'br':a.st==='N.A'?'bp':a.st==='Blocked'?'bgr':a.st==='Email Sent'?'bt':'bgr';
+        const ehCount=(a.emailHistory||[]).length;
+        const fileCount=(a.files||[]).length;
+        // A row is "locked" only when it is still unresolved AND a higher level above it is not complete.
+        // Already-decided rows (Approved/Rejected/N.A) are never locked — they stay editable, even out of order.
+        const rowUnresolved=(a.st==='Pending'||a.st==='Email Sent'||a.st==='Blocked');
+        const locked=rowUnresolved&&(isLk||a.st==='Blocked');
+        const ehBtn=(a.sent&&!locked)?`<button class="btn btn-em" style="padding:5px 11px;font-size:12px;background:#e8eef8;border-color:var(--bl);color:var(--bl)" onclick="openEH('${id}','${a.r}','${a.lv}')">History${ehCount?` (${ehCount})`:''}${fileCount?` · ${fileCount} file${fileCount>1?'s':''}`:''}</button>`:'';
+        const canAttach=!locked&&a.st!=='Approved'&&a.st!=='Rejected'&&a.st!=='N.A';
+        const attachBtn=canAttach?`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openAttach('${id}','${a.r}','${a.lv}')">Attach</button>`:'';
+        const sendBtn=(!locked&&a.st==='Pending'&&r.status!=='Rejected')?`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Send</button>`:'';
+        const remindBtn=(!locked&&a.st==='Email Sent'&&r.status!=='Rejected')?`<button class="btn" style="padding:5px 11px;font-size:12px;border-color:#7a4f00;color:var(--am)" onclick="sendReminder('${id}','${a.r}','${a.lv}')">Remind</button>`:'';
+        // Decision buttons appear only once the email has been sent, or the row was already decided.
+        // A Pending row that has NOT been emailed shows just Send + Attach (you can't decide before contacting).
+        const isDecided=(a.st==='Approved'||a.st==='Rejected'||a.st==='N.A');
+        const canShowDecide=!locked&&(a.st==='Email Sent'||a.sent||isDecided);
+        const decideBtns=canShowDecide?`
+        <button class="btn btn-ok btn-sm ${a.st==='Approved'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Approved')" style="padding:5px 12px;font-size:12px">${a.st==='Approved'?'Approved':'Approve'}</button>
+        <button class="btn btn-no btn-sm ${a.st==='Rejected'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Rejected')" style="padding:5px 12px;font-size:12px">${a.st==='Rejected'?'Rejected':'Reject'}</button>
+        <button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>
+      `:'';
+        const lockedHint=locked?`<span style="font-size:11px;color:var(--tx3);margin-left:6px">Locked — complete the level above first</span>`:'';
+        lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}</div><div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${locked?'Pending':a.st}</span>${sendBtn} ${remindBtn}${ehBtn}${attachBtn}${decideBtns}${lockedHint}</div></div>`;
       });
       lvH+='</div>';
     }
     inR.forEach(a=>{
-      // Bug 2 fix: notify locked until ALL items at higher levels are completed (not just approvals)
-      const lvNum2=parseInt(lv);
-      // Get all unique levels higher than this one
-      const allHigherLevels=[...new Set(r.apvs.map(x=>x.lv))].filter(al=>al>lvNum2);
-      // Check if any item at a higher level is still pending (not yet actioned)
-      const higherStillPending=allHigherLevels.some(al=>r.apvs.filter(x=>x.lv===al).some(x=>x.st==='Pending'));
-      const canNotify2=!higherStillPending&&r.status!=='Rejected'&&a.st==='Pending';
-      const notifyBtn=canNotify2?`<button class="btn btn-em" style="margin-left:6px" onclick="sendOne('${id}','${a.r}')">✉ Notify</button>`:(a.st==='Pending'?`<span style="color:var(--tx3);margin-left:6px;font-size:10px">🔒 Locked — complete previous level first</span>`:'<span style="color:var(--gr);margin-left:6px;font-size:10px">✓ Notified</span>');
-      lvH+=`<div class="minf"><span class="badge bgr" style="font-size:9px;margin-right:5px">L${lv}</span><span class="badge bw" style="font-size:9px;margin-right:5px">${a.t}</span><span style="font-size:9px;color:var(--tx3)">— notify only, no approval needed</span> <strong>${a.r}</strong>${a.n&&a.n!==a.r?` (${a.n})`:''} <span style="color:var(--tx3);font-size:10px">· ✉ ${a.re}</span> ${notifyBtn}</div>`;
+      // Inform rows are never locked by approval-level logic; they can be notified any time the request is active
+      const canNotify2=r.status!=='Rejected'&&a.st==='Pending';
+      const notifyBtn=canNotify2?`<button class="btn btn-em" style="margin-left:6px" onclick="sendOne('${id}','${a.r}','${a.lv}')">Notify</button>`:(a.st==='Pending'?`<span style="color:var(--tx3);margin-left:6px;font-size:12px">Locked — complete previous level first</span>`:'<span style="color:var(--gr);margin-left:6px;font-size:12px">Notified</span>');
+      lvH+=`<div class="minf"><span class="badge bgr" style="font-size:11px;margin-right:5px">L${lv}</span><span class="badge bw" style="font-size:11px;margin-right:5px">${a.t}</span><span style="font-size:11px;color:var(--tx3)">— notify only, no approval needed</span> <strong>${a.r}</strong>${a.n&&a.n!==a.r?` (${a.n})`:''} <span style="color:var(--tx3);font-size:12px">· ${a.re}</span> ${notifyBtn}</div>`;
     });
   });
   const thrH=r.notes.map(nt=>`<div class="tm"><div class="tav">${ini(nt.f)}</div><div class="tb ${nt.f===me?.n?'mine':''}"><div class="tw">${nt.f}</div><div class="tt">${nt.x}</div><div class="ti">${nt.at}</div></div></div>`).join('')||'<div style="font-size:11px;color:var(--tx3)">No notes yet.</div>';
-  document.getElementById('mb').innerHTML=`<h3>${r.sub}</h3><div class="mm">${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · <strong>${r.status}</strong> · ${r.dt} by ${r.sb}</div>${r.purpose?`<div style="background:var(--sur2);border-radius:var(--rs);padding:8px 11px;font-size:12px;color:var(--tx2);margin-bottom:12px"><strong>Purpose:</strong> ${r.purpose}</div>`:''}<div style="margin-bottom:12px"><div style="font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Approval sequence — level by level</div><div class="seq">${seqH||'<span class="badge bg">No sequential approvals</span>'}</div></div>${lvH}<div class="thr"><div class="tht">Notes & activity</div>${thrH}<div class="rb"><textarea id="ntxt-${id}" placeholder="Add a note, record a response, log an update..."></textarea><div class="ras"><button class="btn btn-p" style="padding:5px 11px;font-size:11px" onclick="addNote('${id}')">Add note</button>${(r.sb===me?.n||r.se===me?.e)?`<button class="btn btn-no" style="padding:5px 10px;font-size:11px" onclick="deleteReq('${id}')">🗑 Delete request</button>`:''}<button class="btn" style="padding:5px 10px;font-size:11px" onclick="closeMo()">Close</button></div></div></div>`;
+  document.getElementById('mb').innerHTML=`<h3>${r.sub}</h3><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--ac);font-weight:600;margin:2px 0 4px">Ref: ${getMref(r)}</div><div class="mm">${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · <strong>${r.status}</strong> · ${r.dt} by ${r.sb}</div>${r.purpose?`<div style="background:var(--sur2);border-radius:var(--rs);padding:8px 11px;font-size:12px;color:var(--tx2);margin-bottom:12px"><strong>Purpose:</strong> ${r.purpose}</div>`:''}<div style="margin-bottom:12px"><div style="font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Approval sequence — level by level</div><div class="seq">${seqH||'<span class="badge bg">No sequential approvals</span>'}</div></div>${lvH}<div class="thr"><div class="tht">Notes & activity</div>${thrH}<div class="rb"><textarea id="ntxt-${id}" placeholder="Add a note, record a response, log an update..."></textarea><div class="ras"><button class="btn btn-p" style="padding:7px 14px;font-size:13px" onclick="addNote('${id}')">Add note</button><button class="btn" style="padding:7px 13px;font-size:13px;border-color:var(--tl);color:var(--tl)" onclick="exportSingleReqPDF('${id}')">PDF</button>${(r.sb===me?.n||r.se===me?.e)?`<button class="btn btn-no" style="padding:7px 13px;font-size:13px" onclick="deleteReq('${id}')">Delete request</button>`:''}<button class="btn" style="padding:7px 13px;font-size:13px" onclick="closeMo()">Close</button></div></div></div>`;
   document.getElementById('mo').classList.add('open');
 }
-function sendOne(reqId,role){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role);if(!a)return;
+function sendOne(reqId,role,lv){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
   const alv=getActiveLv(r);
-  if(isApv(a.t)&&a.lv!==alv){showT('Cannot send — Level '+(alv||a.lv)+' must complete first');return}
+  if(r.status==='Rejected'){showT('Cannot send — request has been rejected');return}
+  // block sending a locked row (a higher level is not complete yet)
+  if(isApv(a.t)&&alv!==null&&a.lv<alv){showT('Locked — Level '+alv+' must be completed first');return}
   const to=a.re;
-  const subj=encodeURIComponent(`[DOA ${isInf(a.t)?'NOTIFY':'ACTION REQUIRED'}] ${r.sub}`);
-  // Bug 3: different email body per action type
+  const refCode=`[REF: ${reqId}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
+  // Collect all files from higher levels for auto-carry reminder
+  const higherLvFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length).flatMap(x=>(x.files||[]).map(f=>`  • ${f.name} (from L${x.lv} — ${x.r})`));
+  const attachNote=higherLvFiles.length?`\n\nATTACHMENTS FROM PRIOR LEVELS (please attach to this email):\n${higherLvFiles.join('\n')}`:'';
+  const mref=getMref(r);
+  const subj=encodeURIComponent(`[${mref}] [${isInf(a.t)?'NOTIFY':'ACTION REQUIRED'}] ${r.sub} ${refCode}`);
   function getOpeningPara(t){
-    if(t==='Inform'||t==='Scope Inform')
-      return `This email is to inform you of the following action under the Ben Line Delegation of Authority policy.\n\nThis is for your information only — no action or response is required from you.`;
-    if(t==='Inform & Consult'||t==='Scope Inform & Consult')
-      return `This email is to inform and consult with you on the following action under the Ben Line Delegation of Authority policy.\n\nWhile no formal approval is required, your input and feedback are valued. Please feel free to share any comments or concerns.`;
-    if(t==='Scope Approval'||t==='Approval')
-      return `I am writing to request your formal ${t} for the following action under the Ben Line Delegation of Authority policy.\n\nPlease review the details below and reply with your approval or any questions.`;
-    return `I am writing regarding the following action under the Ben Line Delegation of Authority policy.`;
+    if(t==='Inform'||t==='Scope Inform')return`This email is to inform you of the following action under the Ben Line Delegation of Authority policy.\n\nThis is for your information only — no action or response is required from you.`;
+    if(t==='Inform & Consult'||t==='Scope Inform & Consult')return`This email is to inform and consult with you on the following action under the Ben Line Delegation of Authority policy.\n\nWhile no formal approval is required, your input and feedback are valued. Please feel free to share any comments or concerns.`;
+    if(t==='Scope Approval'||t==='Approval')return`I am writing to request your formal ${t} for the following action under the Ben Line Delegation of Authority policy.\n\nPlease review the details below and reply with your approval or any questions.`;
+    return`I am writing regarding the following action under the Ben Line Delegation of Authority policy.`;
   }
   function getClosingPara(t){
-    if(t==='Inform'||t==='Scope Inform')
-      return `No further action is required from you. This email is for your records.`;
-    if(t==='Inform & Consult'||t==='Scope Inform & Consult')
-      return `Please share any comments or concerns at your earliest convenience. If we do not hear from you, we will proceed with this action.`;
-    return `Please reply to this email with your decision (Approved / Not Approved) and any comments.`;
+    if(t==='Inform'||t==='Scope Inform')return`No further action is required from you. This email is for your records.`;
+    if(t==='Inform & Consult'||t==='Scope Inform & Consult')return`Please share any comments or concerns at your earliest convenience. If we do not hear from you, we will proceed with this action.`;
+    return`Please reply to this email with your decision (Approved / Not Approved) and any comments.\n\nTo help us track this request, please keep the reference code in the subject line when replying.`;
   }
-  const body=encodeURIComponent(`Dear ${a.n||a.r},\n\n${getOpeningPara(a.t)}\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${getClosingPara(a.t)}\n\nThank you,\n${r.sb}`);
+  const bodyText=`Dear ${a.n||a.r},\n\n${getOpeningPara(a.t)}\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.${attachNote}\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${getClosingPara(a.t)}\n\nThank you,\n${r.sb}`;
+  const body=encodeURIComponent(bodyText);
   window.open(`mailto:${to}?subject=${subj}&body=${body}`);
-  try{navigator.clipboard.writeText(decodeURIComponent(body))}catch(e){}
+  try{navigator.clipboard.writeText(bodyText)}catch(e){}
+  // Store in email history
+  if(!a.emailHistory)a.emailHistory=[];
+  a.emailHistory.push({type:'sent',from:r.sb,to:a.re,subject:`[${mref}] [${isInf(a.t)?'NOTIFY':'ACTION REQUIRED'}] ${r.sub} ${refCode}`,body:bodyText,at:now(),refCode});
   a.sent=true;if(a.st==='Pending')a.st='Email Sent';
-  r.notes.push({f:'System',x:`Email sent to ${a.r} (${a.re}) — Action type: ${a.t}`,at:now()});
+  r.notes.push({f:'System',x:`Email sent to ${a.r} (${a.re}) — ${refCode}`,at:now()});
   save();renderAll();openModal(reqId);showT('Email opened for '+a.r);
 }
-function decide(reqId,role,dec){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role);if(!a)return;
-  // Bug 5 fix: if clicking same button again = undo/cancel that decision
+function recomputeStatus(r){
+  // Single source of truth for request status, derived from approval rows only.
+  const apv=r.apvs.filter(x=>isApv(x.t));
+  if(!apv.length){r.status='Approved';return;}
+  // hard reject anywhere => Rejected, and block any still-open approval rows
+  if(apv.some(x=>x.st==='Rejected')){
+    r.status='Rejected';
+    r.apvs.forEach(x=>{if(isApv(x.t)&&(x.st==='Pending'||x.st==='Email Sent'))x.st='Blocked';});
+    return;
+  }
+  // no rejection => unblock anything previously blocked
+  r.apvs.forEach(x=>{if(x.st==='Blocked'&&isApv(x.t))x.st=x.sent?'Email Sent':'Pending';});
+  // every approval row resolved (Approved or N.A) => fully Approved, else still In Progress
+  const allResolved=apv.every(x=>x.st==='Approved'||x.st==='N.A');
+  r.status=allResolved?'Approved':'In Progress';
+}
+function decide(reqId,role,lv,dec){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
+  // if clicking same button again = undo/cancel that decision
   if(a.st===dec){
-    const cancelReason=dec==='Rejected'?prompt(`Reason for cancelling the rejection (optional):`)||'':null;
-    // Bug 4 fix: restore to Email Sent if email was previously sent, not Pending
-    const restoreSt=a.sent?'Email Sent':'Pending';
-    a.st=restoreSt;a.cm='';a.at=null;
-    if(dec==='Rejected'){
-      // Bug 4 fix: restore blocked approvers to their correct prior state too
-      r.apvs.forEach(x=>{if(x.st==='Blocked')x.st=x.sent?'Email Sent':'Pending';});
-      r.status='In Progress';
-    }
-    if(dec==='Approved') r.status='In Progress';
+    const cancelReason=dec==='Rejected'||dec==='N.A'?prompt(`Reason for cancelling (optional):`)||'':null;
+    a.st=a.sent?'Email Sent':'Pending';a.cm='';a.at=null;
+    recomputeStatus(r);
     r.notes.push({f:me?.n||'User',x:`Cancelled ${dec} for ${role}${cancelReason?': '+cancelReason:''}`,at:now()});
     save();renderAll();openModal(reqId);showT('Decision cancelled — '+role+' restored');return;
   }
   // Normal new decision
-  const cm=dec==='Rejected'?prompt(`Reason for rejection (optional):`)||'':null;
-  if(a.st==='Blocked'||r.status==='Rejected'){r.status='In Progress';r.apvs.forEach(x=>{if(x.st==='Blocked')x.st=x.sent?'Email Sent':'Pending';});}
+  const cm=(dec==='Rejected'||dec==='N.A')?prompt(`Reason for ${dec} (required):`)||'N/A':null;
+  const prevStatus=r.status;
   a.st=dec;a.cm=cm||'';a.at=now();
   r.notes.push({f:role,x:`${dec}${cm?': '+cm:''}`,at:now()});
-  const lv=a.lv,atLv=r.apvs.filter(x=>x.lv===lv&&isApv(x.t));
-  const allDn=atLv.every(x=>x.st==='Approved'||x.st==='Rejected');
-  const anyRj=atLv.some(x=>x.st==='Rejected');
-  if(anyRj){
-    r.status='Rejected';
-    r.apvs.forEach(x=>{if(x.r!==role&&(x.st==='Pending'||x.st==='Email Sent'))x.st='Blocked';});
-    r.notes.push({f:'System',x:`Rejected at Level ${lv} by ${role}. Other approvals blocked.`,at:now()});
-  } else if(allDn){
+  recomputeStatus(r);
+  // helpful system notes on level transitions
+  const alvN=parseInt(lv),atLv=r.apvs.filter(x=>x.lv===alvN&&isApv(x.t));
+  if(r.status==='Rejected'){
+    r.notes.push({f:'System',x:`Rejected at Level ${alvN} by ${role}. Other approvals blocked.`,at:now()});
+  } else if(atLv.every(x=>x.st==='Approved'||x.st==='N.A')){
     const nxt=getActiveLv(r);
-    if(nxt===null){r.status='Approved';r.notes.push({f:'System',x:'✅ All approvals collected. Request fully approved.',at:now()})}
-    else{r.notes.push({f:'System',x:`✅ Level ${lv} complete. Level ${nxt} now active — send Level ${nxt} emails now.`,at:now()})}
+    if(nxt===null&&r.status==='Approved'&&prevStatus!=='Approved'){r.notes.push({f:'System',x:'All approvals collected. Request fully approved.',at:now()})}
+    else if(nxt!==null){r.notes.push({f:'System',x:`Level ${alvN} complete. Level ${nxt} now active — send Level ${nxt} emails now.`,at:now()})}
   }
   save();renderAll();openModal(reqId);showT(role+' — '+dec);
 }
@@ -11988,7 +12063,7 @@ function deleteReq(reqId){
   save();renderAll();closeMo();showT('Request deleted');
 }
 function renderMatrix(){
-  let rows=DOA;
+  let rows=getDOA();
   if(mf.s)rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(mf.s.toLowerCase()));
   if(mf.a)rows=rows.filter(r=>r.a===mf.a);
   if(mf.t)rows=rows.filter(r=>r.t===mf.t);
@@ -12000,7 +12075,7 @@ function renderCons(){
   const lt={1:'tl1',2:'tl2',3:'tl3',4:'tl4',5:'tl5'};
   const ll={1:'Level 1 — Board',2:'Level 2 — Executive',3:'Level 3 — Product',4:'Level 4 — Functions',5:'Level 5 — Country'};
   const byLv={};
-  CONS.forEach(x=>{byLv[x.lv]=byLv[x.lv]||[];byLv[x.lv].push(x);});
+  getCONS().forEach(x=>{byLv[x.lv]=byLv[x.lv]||[];byLv[x.lv].push(x);});
   let html='';
   [1,2,3,4,5].forEach(lv=>{
     if(!byLv[lv])return;
@@ -12013,17 +12088,547 @@ function fReqs(v){rf.s=v;renderReqs()}function fReqsSt(v){rf.st=v;renderReqs()}
 function closeMo(){document.getElementById('mo').classList.remove('open')}
 function closeMoBg(e){if(e.target===document.getElementById('mo'))closeMo()}
 function showT(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
-function sendReminder(reqId,role){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role);if(!a)return;
-  const subj=encodeURIComponent(`[REMINDER — DOA] ${r.sub} — Awaiting your ${a.t}`);
+function sendReminder(reqId,role,lv){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
+  const refCode=`[REF: ${reqId}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
+  const mref=getMref(r);
+  const subj=encodeURIComponent(`[${mref}] [REMINDER] ${r.sub} — Awaiting your ${a.t} ${refCode}`);
   const isInfT=isInf(a.t);
-  const reminderClose=isInfT?`If you have any comments or questions, please reply at your earliest convenience. Otherwise no action is required.`:`Please reply to this email with your decision (Approved / Not Approved) at your earliest convenience.`;
-  const body=encodeURIComponent(`Dear ${a.n||a.r},\n\nThis is a gentle reminder regarding the following action which is awaiting your ${a.t}.\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${reminderClose}\n\nThank you,\n${r.sb}`);
+  const reminderClose=isInfT?`If you have any comments or questions, please reply at your earliest convenience. Otherwise no action is required.`:`Please reply to this email with your decision (Approved / Not Approved) at your earliest convenience.\n\nPlease keep the reference code in the subject line when replying.`;
+  const bodyText=`Dear ${a.n||a.r},\n\nThis is a gentle reminder regarding the following action which is awaiting your ${a.t}.\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${reminderClose}\n\nThank you,\n${r.sb}`;
+  const body=encodeURIComponent(bodyText);
   window.open(`mailto:${a.re}?subject=${subj}&body=${body}`);
-  r.notes.push({f:'System',x:`Reminder sent to ${a.r}`,at:now()});
+  if(!a.emailHistory)a.emailHistory=[];
+  a.emailHistory.push({type:'reminder',from:r.sb,to:a.re,subject:`[${mref}] [REMINDER] ${r.sub} ${refCode}`,body:bodyText,at:now(),refCode});
+  r.notes.push({f:'System',x:`Reminder sent to ${a.r} — ${refCode}`,at:now()});
   save();renderAll();openModal(reqId);showT('Reminder sent to '+a.r);
 }
+// ── ADMIN PIN ──
+const ADMIN_PIN='1234'; // change this to your preferred PIN
+function checkPin(){return prompt('Admin PIN required:')===ADMIN_PIN}
+
+function showAddApvForm(reqId){
+  if(!checkPin()){showT('Incorrect PIN');return}
+  const panel=document.getElementById('add-apv-panel-'+reqId);
+  if(panel)panel.style.display=panel.style.display==='none'?'block':'none';
+}
+function apvRoleChange(reqId){
+  const role=document.getElementById('apv-role-'+reqId).value;
+  if(!role)return;
+  const c=getCONS().find(x=>x.r===role);
+  if(c){
+    document.getElementById('apv-name-'+reqId).value=c.n||'';
+    document.getElementById('apv-email-'+reqId).value=c.e||'';
+    const lvSel=document.getElementById('apv-lv-'+reqId);
+    if(c.lv)lvSel.value=String(c.lv);
+  }
+}
+function confirmAddApv(reqId){
+  const r=reqs.find(x=>x.id===reqId);if(!r)return;
+  const role=document.getElementById('apv-role-'+reqId).value;
+  const name=document.getElementById('apv-name-'+reqId).value.trim();
+  const email=document.getElementById('apv-email-'+reqId).value.trim();
+  const lv=parseInt(document.getElementById('apv-lv-'+reqId).value);
+  const type=document.getElementById('apv-type-'+reqId).value;
+  if(!role||!email){showT('Role and email are required');return}
+  r.apvs.push({lv,r:role,t:type,n:name||role,re:email,st:'Pending',sent:false,at:null,cm:''});
+  r.notes.push({f:me?.n||'Admin',x:`Approver added: ${role} (${name||role}) at Level ${lv} — ${type}`,at:now()});
+  save();renderAll();openModal(reqId);showT('Approver added — '+role);
+}
+function removeApv(reqId,role,lv){
+  if(!checkPin()){showT('Incorrect PIN');return}
+  const r=reqs.find(x=>x.id===reqId);if(!r)return;
+  const idx=r.apvs.findIndex(x=>x.r===role&&String(x.lv)===String(lv)&&x.st==='Pending');
+  if(idx===-1){showT('Cannot remove — approver already actioned');return}
+  r.apvs.splice(idx,1);
+  r.notes.push({f:me?.n||'Admin',x:`Approver removed: ${role} at Level ${lv}`,at:now()});
+  save();renderAll();openModal(reqId);showT('Approver removed — '+role);
+}
 function clearAllData(){if(!confirm("This will delete ALL your saved requests and log you out. Are you sure?"))return;localStorage.clear();location.reload();}
+
+// ── EMAIL HISTORY & FILE ATTACH ──
+function openEH(reqId,role,lv){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
+  if(!a.emailHistory)a.emailHistory=[];
+  if(!a.files)a.files=[];
+  // Collect carry-forward files from higher levels
+  const higherFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length);
+  const carryHtml=higherFiles.length?`<div class="carry-banner"><strong>Attachments from prior levels</strong> — include these when sending next level emails:<br>${higherFiles.flatMap(x=>(x.files||[]).map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${x.r}','${x.lv}','${f.id}')">${f.name} <span style="color:var(--tx3)">(L${x.lv} — ${x.r})</span></span>`)).join('')}</div>`:'';
+  const histHtml=a.emailHistory.length?a.emailHistory.map((e,i)=>`<div class="eh-entry ${e.type==='reply'?'eh-reply':e.type==='sent'?'eh-sent':'eh-sent'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:10px;font-weight:600;color:${e.type==='reply'?'var(--gr)':e.type==='reminder'?'var(--am)':'var(--bl)'}">${e.type==='reply'?'Reply received':e.type==='reminder'?'Reminder sent':'Email sent'}</span>
+      <span style="font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace">${e.at}</span>
+    </div>
+    <div style="font-size:10px;color:var(--tx2);margin-bottom:3px">From: <strong>${e.from}</strong> → To: ${e.to}</div>
+    <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Subject: ${e.subject||''}</div>
+    <pre style="font-size:10px;white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:7px 9px;border-radius:4px;border:.5px solid var(--bdr);max-height:140px;overflow-y:auto;font-family:'DM Sans',sans-serif;color:var(--tx2)">${(e.body||'').replace(/</g,'&lt;')}</pre>
+    ${(e.files||[]).length?`<div style="margin-top:4px">${e.files.map(f=>`<span class="eh-file">📄 ${f.name}</span>`).join('')}</div>`:''}
+  </div>`).join(''):`<div style="font-size:11px;color:var(--tx3);padding:12px 0">No email history yet. Send the first email to start tracking.</div>`;
+  const fileHtml=a.files.length?`<div style="margin-top:6px"><div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:4px">Attached files (${a.files.length}):</div>${a.files.map((f,i)=>`<span class="eh-file" onclick="viewFile('${reqId}','${role}','${lv}','${f.id}')">📄 ${f.name}</span> <span style="font-size:9px;color:var(--rd);cursor:pointer" onclick="removeFile('${reqId}','${role}','${lv}','${f.id}')">✕</span>`).join(' ')}</div>`:'';
+  document.getElementById('ehmb').innerHTML=`
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:2px">Email History</h3>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''} · L${lv} · ${a.t}</div>
+    ${carryHtml}
+    <div style="font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Exchange log</div>
+    ${histHtml}
+    <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--bdr)">
+      <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px">Paste a reply you received:</div>
+      <textarea id="eh-reply-txt" style="width:100%;padding:7px 9px;border:.5px solid var(--bdr2);border-radius:var(--rs);font-size:11px;font-family:'DM Sans',sans-serif;resize:vertical;min-height:70px;color:var(--tx);background:var(--sur)" placeholder="Paste the reply email content here..."></textarea>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn btn-p" style="font-size:11px;padding:5px 12px" onclick="saveReply('${reqId}','${role}','${lv}')">Save Reply</button>
+        <label class="btn" style="font-size:13px;padding:6px 13px;cursor:pointer;color:var(--tl);border-color:var(--tl)">Attach File<input type="file" style="display:none" multiple onchange="attachFiles(event,'${reqId}','${role}','${lv}')"/></label>
+        <button class="btn" style="font-size:11px" onclick="closeEh()">Close</button>
+      </div>
+      ${fileHtml}
+      <div style="font-size:9px;color:var(--tx3);margin-top:6px">⚠ Files stored in browser (localStorage ~5MB limit). Use for screenshots or small PDFs only.</div>
+    </div>`;
+  document.getElementById('ehmo').classList.add('open');
+}
+function openAttach(reqId,role,lv){openEH(reqId,role,lv);}
+function saveReply(reqId,role,lv){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
+  const txt=document.getElementById('eh-reply-txt').value.trim();if(!txt){showT('Paste reply content first');return;}
+  if(!a.emailHistory)a.emailHistory=[];
+  a.emailHistory.push({type:'reply',from:a.n||a.r,to:r.sb,body:txt,at:now()});
+  r.notes.push({f:'System',x:`Reply from ${a.r} logged in email history`,at:now()});
+  save();renderAll();openEH(reqId,role,lv);showT('Reply saved');
+}
+function attachFiles(event,reqId,role,lv){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
+  if(!a.files)a.files=[];
+  const files=Array.from(event.target.files);
+  let loaded=0;
+  files.forEach(file=>{
+    if(file.size>1.5*1024*1024){showT(`${file.name} too large — max 1.5MB per file`);loaded++;if(loaded===files.length){save();renderAll();openEH(reqId,role,lv);}return;}
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const fid='f'+Date.now()+Math.random().toString(36).slice(2,6);
+      a.files.push({id:fid,name:file.name,type:file.type,data:ev.target.result,at:now()});
+      r.notes.push({f:'System',x:`File attached: ${file.name} → ${a.r} (L${lv})`,at:now()});
+      loaded++;if(loaded===files.length){save();renderAll();openEH(reqId,role,lv);showT(`${files.length} file(s) attached`);}
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function viewFile(reqId,role,lv,fid){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
+  const f=(a.files||[]).find(x=>x.id===fid);if(!f)return;
+  const w=window.open('','_blank');
+  if(f.type&&f.type.startsWith('image/')){w.document.write(`<html><body style="margin:0;background:#000"><img src="${f.data}" style="max-width:100%;display:block;margin:auto"/></body></html>`);}
+  else{const link=w.document.createElement('a');link.href=f.data;link.download=f.name;w.document.body.appendChild(link);link.click();}
+}
+function removeFile(reqId,role,lv,fid){
+  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
+  const idx=(a.files||[]).findIndex(x=>x.id===fid);if(idx===-1)return;
+  const name=a.files[idx].name;
+  a.files.splice(idx,1);
+  r.notes.push({f:'System',x:`File removed: ${name} from ${a.r} (L${lv})`,at:now()});
+  save();renderAll();openEH(reqId,role,lv);showT('File removed');
+}
+function closeEh(){document.getElementById('ehmo').classList.remove('open');}
+function closeEhBg(e){if(e.target===document.getElementById('ehmo'))closeEh();}
+
+// ── FEATURE A: EXPORT PDF (all requests) ──
+function buildReqHtml(r,lvN){
+  const apvs=r.apvs.filter(a=>isApv(a.t));
+  const infs=r.apvs.filter(a=>isInf(a.t));
+  const stClass=r.status==='Approved'?'st-approved':r.status==='Rejected'?'st-rejected':r.status==='N.A'?'st-na':'st-pending';
+  let eHtml='';
+  r.apvs.forEach(a=>{
+    if((a.emailHistory||[]).length||(a.files||[]).length){
+      eHtml+=`<div style="margin-top:6px;padding:6px 8px;background:#f5f4f0;border-radius:4px;border-left:3px solid #1a3a6b"><strong style="font-size:9px;color:#1a3a6b">EMAIL HISTORY — ${a.r} (L${a.lv})</strong>`;
+      (a.emailHistory||[]).forEach(e=>{eHtml+=`<div style="margin-top:4px;font-size:9px;color:#6b6960"><strong>${e.type==='reply'?'↩ Reply':'✉ Sent'}</strong> · ${e.at}<br><pre style="white-space:pre-wrap;font-family:Arial;font-size:9px;margin:2px 0;max-height:80px;overflow:hidden">${(e.body||'').replace(/</g,'&lt;').substring(0,400)}${(e.body||'').length>400?'…':''}</pre></div>`;});
+      if((a.files||[]).length)eHtml+=`<div style="font-size:9px;color:#6b6960;margin-top:3px">📎 Files: ${a.files.map(f=>f.name).join(', ')}</div>`;
+      eHtml+='</div>';
+    }
+  });
+  return `<div class="req">
+    <div class="rtitle">${r.sub}</div>
+    <div class="rmeta">${r.scope?r.scope+' | ':''}${r.area} / ${r.cat} · ID: ${r.id} · Submitted: ${r.dt} by ${r.sb} · Country: ${r.co||'Group'} · Status: <span class="${stClass}">${r.status}</span></div>
+    ${r.purpose?`<div class="rpurpose"><strong>Purpose:</strong> ${r.purpose}</div>`:''}
+    <table><thead><tr><th>Level</th><th>Role</th><th>Name</th><th>Email</th><th>Type</th><th>Status</th><th>Decision Time</th><th>Comment</th></tr></thead><tbody>
+    ${apvs.map(a=>{const sc=a.st==='Approved'?'st-approved':a.st==='Rejected'?'st-rejected':a.st==='N.A'?'st-na':a.st==='Email Sent'?'st-sent':'st-pending';return`<tr><td>${lvN[a.lv]||'L'+a.lv}</td><td>${a.r}</td><td>${a.n||''}</td><td>${a.re||''}</td><td>${a.t}</td><td class="${sc}">${a.st}</td><td>${a.at||'—'}</td><td>${a.cm||'—'}</td></tr>`;}).join('')}
+    </tbody></table>
+    ${infs.length?`<strong style="font-size:9px;color:#6b6960">INFORM / NOTIFY</strong><table><thead><tr><th>Level</th><th>Role</th><th>Name</th><th>Email</th><th>Type</th><th>Status</th></tr></thead><tbody>${infs.map(a=>`<tr><td>${lvN[a.lv]||'L'+a.lv}</td><td>${a.r}</td><td>${a.n||''}</td><td>${a.re||''}</td><td>${a.t}</td><td>${a.st}</td></tr>`).join('')}</tbody></table>`:''}
+    ${eHtml}
+    ${r.notes.length?`<h2>Activity Log</h2>${r.notes.map(nt=>`<div class="note"><span class="note-who">${nt.f}</span> · ${nt.at}<br>${nt.x}</div>`).join('')}`:''}
+  </div>`;
+}
+const PDF_STYLE=`<style>body{font-family:Arial,sans-serif;font-size:11px;color:#1a1916;margin:0;padding:20px}h1{font-size:16px;font-weight:700;margin-bottom:2px}.sub{font-size:10px;color:#6b6960;margin-bottom:20px}.req{border:1px solid #e2e0d8;border-radius:6px;padding:12px 14px;margin-bottom:14px;page-break-inside:avoid}.rtitle{font-size:12px;font-weight:700;margin-bottom:2px}.rmeta{font-size:10px;color:#6b6960;margin-bottom:8px}.rpurpose{font-size:10px;color:#444;background:#f5f4f0;padding:6px 8px;border-radius:4px;margin-bottom:8px}table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:8px}th{background:#f0efe9;border:1px solid #e2e0d8;padding:4px 6px;text-align:left;font-weight:600;color:#6b6960;text-transform:uppercase;font-size:9px}td{border:1px solid #e2e0d8;padding:4px 6px;vertical-align:top}.st-approved{color:#1a5c3a;font-weight:600}.st-rejected{color:#7a1e1e;font-weight:600}.st-na{color:#4a1a7a;font-weight:600}.st-pending{color:#9e9c94}.st-sent{color:#0a5c5c}.note{font-size:9px;color:#6b6960;border-left:2px solid #e2e0d8;padding-left:6px;margin-bottom:3px}.note-who{font-weight:600;color:#1a1916}h2{font-size:11px;font-weight:600;color:#6b6960;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 5px;border-top:1px solid #e2e0d8;padding-top:8px}@media print{body{padding:10px}.req{page-break-inside:avoid}}</style>`;
+function openPdfWindow(html){
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const w=window.open(url,'_blank');
+  if(w){w.onload=()=>{w.print();URL.revokeObjectURL(url);}}
+  else{const a=document.createElement('a');a.href=url;a.download='DOA_Export_'+new Date().toISOString().slice(0,10)+'.html';a.click();URL.revokeObjectURL(url);}
+  showT('Export ready — print as PDF from the new tab');
+}
+function exportPDF(){
+  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
+  let html=`<html><head><meta charset="UTF-8"><title>DOA Approval History</title>${PDF_STYLE}</head><body><h1>DOA Approval History</h1><div class="sub">Exported ${now()} · ${reqs.length} request(s) · User: ${me?.n||''} (${me?.e||''})</div>`;
+  reqs.forEach(r=>{html+=buildReqHtml(r,lvN);});
+  html+='</body></html>';
+  openPdfWindow(html);
+}
+function exportAllReqsPDF(){
+  const myReqs=reqs.filter(r=>r.sb===me?.n||r.se===me?.e);
+  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
+  let html=`<html><head><meta charset="UTF-8"><title>My DOA Requests</title>${PDF_STYLE}</head><body><h1>My DOA Requests</h1><div class="sub">Exported ${now()} · ${myReqs.length} request(s) · User: ${me?.n||''} (${me?.e||''})</div>`;
+  myReqs.forEach(r=>{html+=buildReqHtml(r,lvN);});
+  html+='</body></html>';
+  openPdfWindow(html);
+}
+// ── EXPORT MODE (checkbox select) ──
+let exportMode=false;
+let exportSelected=new Set();
+function toggleExportMode(){
+  exportMode=true;exportSelected.clear();
+  document.getElementById('export-select-btn').style.display='none';
+  document.getElementById('export-confirm-btn').style.display='inline-flex';
+  document.getElementById('export-cancel-btn').style.display='inline-flex';
+  document.getElementById('export-count-label').style.display='inline';
+  renderReqs();
+}
+function cancelExportMode(){
+  exportMode=false;exportSelected.clear();
+  document.getElementById('export-select-btn').style.display='inline-flex';
+  document.getElementById('export-confirm-btn').style.display='none';
+  document.getElementById('export-cancel-btn').style.display='none';
+  document.getElementById('export-count-label').style.display='none';
+  renderReqs();
+}
+function toggleExportSelect(reqId){
+  if(exportSelected.has(reqId))exportSelected.delete(reqId);
+  else exportSelected.add(reqId);
+  const lbl=document.getElementById('export-count-label');
+  if(lbl)lbl.textContent=exportSelected.size+' selected';
+  // update checkbox visual on the row
+  const cb=document.getElementById('export-cb-'+reqId);
+  if(cb)cb.checked=exportSelected.has(reqId);
+}
+function exportSelectedPDF(){
+  if(!exportSelected.size){showT('Select at least one request first');return}
+  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
+  const selected=reqs.filter(r=>exportSelected.has(r.id));
+  let html=`<html><head><meta charset="UTF-8"><title>DOA Export</title>${PDF_STYLE}</head><body><h1>DOA Requests Export</h1><div class="sub">Exported ${now()} · ${selected.length} request(s) · User: ${me?.n||''} (${me?.e||''})</div>`;
+  selected.forEach(r=>{html+=buildReqHtml(r,lvN);});
+  html+='</body></html>';
+  openPdfWindow(html);
+  cancelExportMode();
+}
+function exportSingleReqPDF(reqId){
+  const r=reqs.find(x=>x.id===reqId);if(!r)return;
+  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
+  const html=`<html><head><meta charset="UTF-8"><title>DOA Request — ${r.sub}</title>${PDF_STYLE}</head><body><h1>DOA Request Report</h1><div class="sub">Exported ${now()} · User: ${me?.n||''}</div>${buildReqHtml(r,lvN)}</body></html>`;
+  openPdfWindow(html);
+}
+
+// ── FEATURE B: MATRIX ADMIN (PIN = 1111) ──
+const MATRIX_PIN='1111';
+let DOA_CUSTOM=JSON.parse(localStorage.getItem('doa_custom')||'[]');
+let CONS_CUSTOM=JSON.parse(localStorage.getItem('cons_custom')||'[]');
+function getDOA(){return [...DOA,...DOA_CUSTOM]}
+function getCONS(){return [...CONS,...CONS_CUSTOM]}
+function saveCustom(){localStorage.setItem('doa_custom',JSON.stringify(DOA_CUSTOM));localStorage.setItem('cons_custom',JSON.stringify(CONS_CUSTOM));}
+function checkMtxPin(){return prompt('Admin PIN required:')===MATRIX_PIN}
+
+// helpers to build cascading dropdowns from ALL DOA data (base + custom)
+function buildSelectWithNew(id,options,placeholder){
+  return`<select class="fs" id="${id}" style="font-size:11px;white-space:normal;word-break:break-word"><option value="">— ${placeholder} —</option>${options.map(o=>`<option value="${o}" title="${o}">${o}</option>`).join('')}<option value="__new__">✚ Add new…</option></select>`;
+}
+function handleNewOption(selId){
+  const sel=document.getElementById(selId);if(!sel)return;
+  if(sel.value==='__new__'){
+    const val=prompt('Enter new value:');
+    if(val&&val.trim()){
+      const opt=document.createElement('option');opt.value=val.trim();opt.textContent=val.trim();
+      sel.insertBefore(opt,sel.lastElementChild);sel.value=val.trim();
+    } else sel.value='';
+  }
+}
+function buildLogicEditForm(prefix,lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,rule){
+  const val=(key)=>rule?rule[key]:'';
+  // Fix 1+2: select style allows long text to wrap; Fix 5: 13px font
+  const selWithPrefill=(id,options,placeholder,current)=>{
+    const opts=options.includes(current)?options:[...options,current].filter(Boolean);
+    return`<select class="fs" id="${id}" style="font-size:13px;white-space:normal;word-break:break-word;height:auto">${!current?`<option value="">— ${placeholder} —</option>`:''}`+opts.map(o=>`<option value="${o}" ${o===current?'selected':''} title="${o}">${o}</option>`).join('')+`<option value="__new__">✚ Add new…</option></select>`;
+  };
+  return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div><div class="fl" style="font-size:13px">Scope</div>${selWithPrefill(prefix+'sc',allScopes,'select scope',val('sc'))}</div>
+    <div><div class="fl" style="font-size:13px">Area</div>${selWithPrefill(prefix+'a',allAreas,'select area',val('a'))}</div>
+    <div><div class="fl" style="font-size:13px">Category</div>${selWithPrefill(prefix+'c',allCats,'select category',val('c'))}</div>
+    <div><div class="fl" style="font-size:13px">Sub-category / Action</div>${selWithPrefill(prefix+'s',allSubs,'select sub-category',val('s'))}</div>
+    <div><div class="fl" style="font-size:13px">Approver Role</div><select class="fs" id="${prefix}r" style="font-size:13px"><option value="">— select role —</option>${allRoles.map(r=>`<option value="${r}" ${r===val('r')?'selected':''}>${r}</option>`).join('')}<option value="__note__" disabled style="color:var(--tx3)">── create contact first for new roles ──</option></select></div>
+    <div><div class="fl" style="font-size:13px">Level</div><select class="fs" id="${prefix}lv" style="font-size:13px">${lvOpts}</select></div>
+    <div><div class="fl" style="font-size:13px">Type</div><select class="fs" id="${prefix}t" style="font-size:13px">${typeOpts}</select></div>
+  </div>`;
+  if(rule){setTimeout(()=>{const lvEl=document.getElementById(prefix+'lv');if(lvEl)lvEl.value=String(rule.lv);const tEl=document.getElementById(prefix+'t');if(tEl)tEl.value=rule.t;},0);}
+}
+
+// Fix 4: cascading filter for Update/Remove logic (scope→area→cat→sub→role)
+let adminFilterState={action:'',sc:'',a:'',c:'',s:''};
+function buildAdminCascade(action){
+  adminFilterState.action=action;
+  const allDOA=getDOA();
+  const scopes=[...new Set(allDOA.map(r=>r.sc))].sort();
+  const panel=document.getElementById('admin-cascade-filter');
+  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
+  panel.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+      <div><div class="fl" style="font-size:13px">Scope</div>
+        <select class="fs" id="adm-f-sc" style="font-size:13px" onchange="adminCascadeChange('sc',this.value)">
+          <option value="">All scopes</option>${scopes.map(s=>`<option value="${s}">${s}</option>`).join('')}
+        </select></div>
+      <div><div class="fl" style="font-size:13px">Area</div>
+        <select class="fs" id="adm-f-a" style="font-size:13px" disabled onchange="adminCascadeChange('a',this.value)">
+          <option value="">— select scope first —</option>
+        </select></div>
+      <div><div class="fl" style="font-size:13px">Category</div>
+        <select class="fs" id="adm-f-c" style="font-size:13px" disabled onchange="adminCascadeChange('c',this.value)">
+          <option value="">— select area first —</option>
+        </select></div>
+      <div><div class="fl" style="font-size:13px">Sub-category</div>
+        <select class="fs" id="adm-f-s" style="font-size:13px;white-space:normal;word-break:break-word" disabled onchange="adminCascadeChange('s',this.value)">
+          <option value="">— select category first —</option>
+        </select></div>
+    </div>
+    <div id="adm-rule-list" style="margin-bottom:10px"><div style="font-size:13px;color:var(--tx3)">Select scope to filter rules…</div></div>`;
+}
+function adminCascadeChange(field,val){
+  adminFilterState[field]=val;
+  // reset downstream
+  if(field==='sc'){adminFilterState.a='';adminFilterState.c='';adminFilterState.s='';}
+  if(field==='a'){adminFilterState.c='';adminFilterState.s='';}
+  if(field==='c'){adminFilterState.s='';}
+  const allDOA=getDOA();
+  // repopulate area
+  const aEl=document.getElementById('adm-f-a');
+  if(aEl){
+    const areas=[...new Set(allDOA.filter(r=>!adminFilterState.sc||r.sc===adminFilterState.sc).map(r=>r.a))].sort();
+    aEl.disabled=!adminFilterState.sc;
+    aEl.innerHTML=`<option value="">All areas</option>`+areas.map(a=>`<option value="${a}" ${a===adminFilterState.a?'selected':''}>${a}</option>`).join('');
+  }
+  // repopulate cat
+  const cEl=document.getElementById('adm-f-c');
+  if(cEl){
+    const cats=[...new Set(allDOA.filter(r=>(!adminFilterState.sc||r.sc===adminFilterState.sc)&&(!adminFilterState.a||r.a===adminFilterState.a)).map(r=>r.c))].sort();
+    cEl.disabled=!adminFilterState.a;
+    cEl.innerHTML=`<option value="">All categories</option>`+cats.map(c=>`<option value="${c}" ${c===adminFilterState.c?'selected':''}>${c}</option>`).join('');
+  }
+  // repopulate sub
+  const sEl=document.getElementById('adm-f-s');
+  if(sEl){
+    const subs=[...new Set(allDOA.filter(r=>(!adminFilterState.sc||r.sc===adminFilterState.sc)&&(!adminFilterState.a||r.a===adminFilterState.a)&&(!adminFilterState.c||r.c===adminFilterState.c)).map(r=>r.s))].sort();
+    sEl.disabled=!adminFilterState.c;
+    sEl.innerHTML=`<option value="">All sub-categories</option>`+subs.map(s=>`<option value="${s}" ${s===adminFilterState.s?'selected':''}>${s}</option>`).join('');
+  }
+  adminRenderRuleList();
+}
+function adminRenderRuleList(){
+  const allDOA=getDOA();
+  const {sc,a,c,s,action}=adminFilterState;
+  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
+  let rules=allDOA.filter(r=>(!sc||r.sc===sc)&&(!a||r.a===a)&&(!c||r.c===c)&&(!s||r.s===s));
+  const el=document.getElementById('adm-rule-list');if(!el)return;
+  if(!rules.length){el.innerHTML=`<div style="font-size:13px;color:var(--tx3)">No rules match. Adjust filters above.</div>`;return;}
+  if(action==='update-logic'){
+    el.innerHTML=`<div class="fl" style="font-size:13px;margin-bottom:4px">Select rule to edit (${rules.length} shown)</div>`+
+      `<select class="fs" id="al-upd-sel" style="font-size:13px;width:100%" onchange="loadLogicForEdit()">`+
+      `<option value="">— select —</option>`+
+      rules.map(r=>{const i=allDOA.indexOf(r);return`<option value="${i}">[${r.sc}] ${r.a} / ${r.c} / ${r.s.substring(0,50)}${r.s.length>50?'…':''} — ${r.r} (${lvN[r.lv]||'L'+r.lv})</option>`;}).join('')+
+      `</select>`+
+      `<div id="al-upd-form" style="display:none;margin-top:10px"><div id="al-upd-fields"></div>`+
+      `<div class="ib" style="margin-bottom:8px;font-size:13px">Changes apply to new requests only.</div>`+
+      `<div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doUpdateLogic()">Save Changes</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div></div>`;
+  } else if(action==='remove-logic'){
+    el.innerHTML=`<div class="fl" style="font-size:13px;margin-bottom:4px">Select rule to remove (${rules.length} shown)</div>`+
+      `<select class="fs" id="al-rm-sel" style="font-size:13px;width:100%;margin-bottom:10px" onchange="adminShowRemovePreview()">`+
+      `<option value="">— select —</option>`+
+      rules.map(r=>{const i=allDOA.indexOf(r);return`<option value="${i}">[${r.sc}] ${r.a} / ${r.c} / ${r.s.substring(0,50)}${r.s.length>50?'…':''} — ${r.r} (${lvN[r.lv]||'L'+r.lv})</option>`;}).join('')+
+      `</select>`+
+      `<div id="al-rm-preview" style="display:none;margin-bottom:10px;padding:8px 10px;background:var(--rdb);border:.5px solid #d09090;border-radius:var(--rs);font-size:13px"></div>`+
+      `<div style="display:flex;gap:6px"><button class="btn btn-no" style="font-size:13px" onclick="doRemoveLogic()">Remove Rule</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
+  }
+}
+function adminShowRemovePreview(){
+  const sel=document.getElementById('al-rm-sel');if(!sel)return;
+  const idx=parseInt(sel.value);const preview=document.getElementById('al-rm-preview');if(!preview)return;
+  if(isNaN(idx)){preview.style.display='none';return;}
+  const rule=getDOA()[idx];
+  preview.style.display='block';preview.innerHTML=`Will remove: <strong>[${rule.sc}] ${rule.a} / ${rule.c} / ${rule.s}</strong> — ${rule.r} (L${rule.lv}, ${rule.t})`;
+}
+
+
+const COUNTRY_LIST=["Singapore","China","Hong Kong","Taiwan","Korea","Japan","Indonesia","North America","Canada","India","Sri Lanka","Thailand","Cambodia","Philippines","Vietnam","Malaysia","Bangladesh","Australia","Myanmar","Brunei","Group"];
+
+function mtxAdmin(action){
+  if(!checkMtxPin()){showT('Incorrect PIN');return}
+  const panel=document.getElementById('mtx-admin-panel');
+  panel.style.display='block';
+  const typeOpts=['Approval','Scope Approval','Inform','Scope Inform','Inform & Consult','Scope Inform & Consult'].map(t=>`<option value="${t}">${t}</option>`).join('');
+  const lvOpts='<option value="5">L5 — Country</option><option value="4">L4 — Functions</option><option value="3">L3 — Product</option><option value="2">L2 — Executive</option><option value="1">L1 — Board</option>';
+  const allDOA=getDOA();
+  const allScopes=[...new Set(allDOA.map(r=>r.sc))].sort();
+  const allAreas=[...new Set(allDOA.map(r=>r.a))].sort();
+  const allCats=[...new Set(allDOA.map(r=>r.c))].sort();
+  const allSubs=[...new Set(allDOA.map(r=>r.s))].sort();
+  const allRoles=[...new Set(getCONS().map(c=>c.r))].sort();
+  // Fix 3: country dropdown with Add new
+  const countryOptHtml=`<option value="">— none / Group —</option>`+COUNTRY_LIST.map(c=>`<option value="${c}">${c}</option>`).join('')+`<option value="__new__">✚ Add new country…</option>`;
+
+  if(action==='create-logic'){
+    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">＋ Create Approval Logic Rule</div>
+    <div class="ib" style="margin-bottom:10px;font-size:13px">Select from existing values or <strong>✚ Add new…</strong> to type a new one. Changes apply to new requests only.</div>
+    ${buildLogicEditForm('al-',lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,null)}
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">After choosing "✚ Add new…" type the value in the prompt — it will be selected automatically.</div>
+    <div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doCreateLogic()">Create Rule</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
+    ['al-sc','al-a','al-c','al-s'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>handleNewOption(id));});
+  } else if(action==='update-logic'){
+    // Fix 4: cascading filter UI
+    adminFilterState={action:'update-logic',sc:'',a:'',c:'',s:''};
+    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:8px">✎ Update Approval Logic</div>
+    <div class="wb" style="margin-bottom:10px;font-size:13px">Filter rules using the dropdowns below, then select the rule to edit. Editing base rules saves an override.</div>
+    <div id="admin-cascade-filter"></div>`;
+    buildAdminCascade('update-logic');
+  } else if(action==='remove-logic'){
+    adminFilterState={action:'remove-logic',sc:'',a:'',c:'',s:''};
+    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:8px">✕ Remove Approval Logic</div>
+    <div class="wb" style="margin-bottom:10px;font-size:13px">Filter rules using the dropdowns below, then select the rule to remove. Changes apply to new requests only.</div>
+    <div id="admin-cascade-filter"></div>`;
+    buildAdminCascade('remove-logic');
+  } else if(action==='create-contact'){
+    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">＋ Create Contact</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><div class="fl" style="font-size:13px">Full Name</div><input class="fi" id="co-n" placeholder="e.g. John Smith" style="font-size:13px"/></div>
+      <div><div class="fl" style="font-size:13px">Role</div><input class="fi" id="co-r" placeholder="e.g. Country Manager" style="font-size:13px"/></div>
+      <div><div class="fl" style="font-size:13px">Email</div><input class="fi" id="co-e" placeholder="john.smith@benline.com" style="font-size:13px"/></div>
+      <div><div class="fl" style="font-size:13px">Level</div><select class="fs" id="co-lv" style="font-size:13px">${lvOpts}</select></div>
+      <div><div class="fl" style="font-size:13px">Country</div><select class="fs" id="co-co" style="font-size:13px" onchange="handleNewOption('co-co')">${countryOptHtml}</select></div>
+    </div>
+    <div class="ib" style="margin-bottom:10px;font-size:13px">New contact will appear in Contacts and can be used as an approver role in Create Approval Logic.</div>
+    <div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doCreateContact()">Create Contact</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
+  } else if(action==='update-contact'){
+    const allCons=getCONS();
+    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">✎ Update Contact</div>
+    <div class="wb" style="margin-bottom:8px;font-size:13px">Editing base contacts saves an override copy. Changes apply to new requests only.</div>
+    <select class="fs" id="co-upd-sel" style="font-size:13px;width:100%;margin-bottom:10px" onchange="loadContactForEdit()"><option value="">Select contact...</option>${allCons.map((c,i)=>`<option value="${i}">${c.n} — ${c.r}${c.co?' ('+c.co+')':''}</option>`).join('')}</select>
+    <div id="co-upd-form" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><div class="fl" style="font-size:13px">Full Name</div><input class="fi" id="co-upd-n" style="font-size:13px"/></div>
+        <div><div class="fl" style="font-size:13px">Role</div><input class="fi" id="co-upd-r" style="font-size:13px"/></div>
+        <div><div class="fl" style="font-size:13px">Email</div><input class="fi" id="co-upd-e" style="font-size:13px"/></div>
+        <div><div class="fl" style="font-size:13px">Level</div><select class="fs" id="co-upd-lv" style="font-size:13px">${lvOpts}</select></div>
+        <div><div class="fl" style="font-size:13px">Country</div><select class="fs" id="co-upd-co" style="font-size:13px" onchange="handleNewOption('co-upd-co')"><option value="">— none / Group —</option>${COUNTRY_LIST.map(c=>`<option value="${c}">${c}</option>`).join('')}<option value="__new__">✚ Add new country…</option></select></div>
+      </div>
+      <div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doUpdateContact()">Save Changes</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>
+    </div>`;
+  } else if(action==='remove-contact'){
+    const allCons=getCONS();
+    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">✕ Remove Contact</div>
+    <select class="fs" id="co-rm-sel" style="font-size:13px;width:100%;margin-bottom:10px"><option value="">Select contact to remove...</option>${allCons.map((c,i)=>`<option value="${i}">${c.n} — ${c.r}${c.co?' ('+c.co+')':''}</option>`).join('')}</select>
+    <div class="wb" style="margin-bottom:10px;font-size:13px">Removes this contact from future requests. Existing requests are unaffected.</div>
+    <div style="display:flex;gap:6px"><button class="btn btn-no" style="font-size:13px" onclick="doRemoveContact()">Remove Contact</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
+  }
+}
+function closeMtxPanel(){document.getElementById('mtx-admin-panel').style.display='none';}
+function doCreateLogic(){
+  const sc=document.getElementById('al-sc').value.trim(),a=document.getElementById('al-a').value.trim(),c=document.getElementById('al-c').value.trim(),s=document.getElementById('al-s').value.trim(),r=document.getElementById('al-r').value.trim(),lv=parseInt(document.getElementById('al-lv').value),t=document.getElementById('al-t').value;
+  if(!sc||!a||!c||!s||!r||sc==='__new__'||a==='__new__'||c==='__new__'||s==='__new__'){showT('All fields are required — confirm any new values first');return}
+  DOA_CUSTOM.push({sc,a,c,s,r,lv,t});saveCustom();renderMatrix();closeMtxPanel();showT('Rule created — applies to new requests');
+}
+function loadLogicForEdit(){
+  const idx=document.getElementById('al-upd-sel').value;
+  if(idx===''){document.getElementById('al-upd-form').style.display='none';return}
+  const rule=getDOA()[parseInt(idx)];
+  const allDOA=getDOA();
+  const allScopes=[...new Set(allDOA.map(r=>r.sc))].sort();
+  const allAreas=[...new Set(allDOA.map(r=>r.a))].sort();
+  const allCats=[...new Set(allDOA.map(r=>r.c))].sort();
+  const allSubs=[...new Set(allDOA.map(r=>r.s))].sort();
+  const allRoles=[...new Set(getCONS().map(c=>c.r))].sort();
+  const typeOpts=['Approval','Scope Approval','Inform','Scope Inform','Inform & Consult','Scope Inform & Consult'].map(t=>`<option value="${t}">${t}</option>`).join('');
+  const lvOpts='<option value="5">L5 — Country</option><option value="4">L4 — Functions</option><option value="3">L3 — Product</option><option value="2">L2 — Executive</option><option value="1">L1 — Board</option>';
+  document.getElementById('al-upd-fields').innerHTML=buildLogicEditForm('al-upd-',lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,rule);
+  // lv and t selects are now set by buildLogicEditForm's setTimeout — no manual override needed
+  ['al-upd-sc','al-upd-a','al-upd-c','al-upd-s'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>handleNewOption(id));});
+  document.getElementById('al-upd-form').style.display='block';
+}
+function doUpdateLogic(){
+  const idx=parseInt(document.getElementById('al-upd-sel').value);if(isNaN(idx)){showT('Select a rule first');return}
+  const sc=document.getElementById('al-upd-sc').value.trim();
+  const a=document.getElementById('al-upd-a').value.trim();
+  const c=document.getElementById('al-upd-c').value.trim();
+  const s=document.getElementById('al-upd-s').value.trim();
+  const r=document.getElementById('al-upd-r').value.trim();
+  const lv=parseInt(document.getElementById('al-upd-lv').value);
+  const t=document.getElementById('al-upd-t').value;
+  if(!sc||!a||!c||!s||!r){showT('All fields are required');return}
+  const updated={sc,a,c,s,r,lv,t};
+  if(idx<DOA.length){
+    const origRule=DOA[idx];
+    const origKey=`${origRule.sc}|${origRule.a}|${origRule.c}|${origRule.s}|${origRule.r}|${origRule.lv}`;
+    const priorIdx=DOA_CUSTOM.findIndex(x=>`${x.sc}|${x.a}|${x.c}|${x.s}|${x.r}|${x.lv}`===origKey);
+    if(priorIdx>-1)DOA_CUSTOM.splice(priorIdx,1);
+    DOA_CUSTOM.push(updated);
+  } else{DOA_CUSTOM[idx-DOA.length]=updated;}
+  saveCustom();renderMatrix();closeMtxPanel();showT('Rule updated — applies to new requests');
+}
+function doRemoveLogic(){
+  const idx=parseInt(document.getElementById('al-rm-sel').value);if(isNaN(idx)){showT('Select a rule first');return}
+  const allDOA=getDOA();
+  if(idx<DOA.length){// base rule: add "removed" marker so it's filtered out
+    DOA_CUSTOM.push({...allDOA[idx],_removed:true});
+  } else {DOA_CUSTOM.splice(idx-DOA.length,1);}
+  saveCustom();renderMatrix();closeMtxPanel();showT('Rule removed — applies to new requests');
+}
+// Override getDOA to filter removed markers
+function getDOA(){
+  const removedKeys=new Set(DOA_CUSTOM.filter(x=>x._removed).map(x=>`${x.sc}|${x.a}|${x.c}|${x.s}|${x.r}|${x.lv}`));
+  const base=DOA.filter(r=>!removedKeys.has(`${r.sc}|${r.a}|${r.c}|${r.s}|${r.r}|${r.lv}`));
+  return [...base,...DOA_CUSTOM.filter(x=>!x._removed)];
+}
+function doCreateContact(){
+  const n=document.getElementById('co-n').value.trim(),r=document.getElementById('co-r').value.trim(),e=document.getElementById('co-e').value.trim(),lv=parseInt(document.getElementById('co-lv').value),co=document.getElementById('co-co').value.trim();
+  if(!n||!r||!e){showT('Name, role and email are required');return}
+  const entry={n,r,e,lv};if(co)entry.co=co;
+  CONS_CUSTOM.push(entry);saveCustom();renderCons();closeMtxPanel();showT('Contact created');
+}
+function loadContactForEdit(){
+  const idx=document.getElementById('co-upd-sel').value;
+  if(idx===''){document.getElementById('co-upd-form').style.display='none';return}
+  const c=getCONS()[parseInt(idx)];
+  document.getElementById('co-upd-n').value=c.n;document.getElementById('co-upd-r').value=c.r;document.getElementById('co-upd-e').value=c.e;document.getElementById('co-upd-lv').value=String(c.lv);
+  // country dropdown: if value not in list, add it then select
+  const coSel=document.getElementById('co-upd-co');if(coSel){const coVal=c.co||'';if(coVal&&![...coSel.options].some(o=>o.value===coVal)){const opt=document.createElement('option');opt.value=coVal;opt.textContent=coVal;coSel.insertBefore(opt,coSel.lastElementChild);}coSel.value=coVal;}
+  document.getElementById('co-upd-form').style.display='block';
+}
+function doUpdateContact(){
+  const idx=parseInt(document.getElementById('co-upd-sel').value);if(isNaN(idx)){showT('Select a contact first');return}
+  const co=document.getElementById('co-upd-co').value.trim();
+  const entry={n:document.getElementById('co-upd-n').value.trim(),r:document.getElementById('co-upd-r').value.trim(),e:document.getElementById('co-upd-e').value.trim(),lv:parseInt(document.getElementById('co-upd-lv').value)};
+  if(co)entry.co=co;
+  if(idx<CONS.length){
+    const origCon=CONS[idx];
+    const origKey=`${origCon.n}|${origCon.r}|${origCon.e}`;
+    const priorIdx=CONS_CUSTOM.findIndex(x=>`${x.n}|${x.r}|${x.e}`===origKey);
+    if(priorIdx>-1)CONS_CUSTOM.splice(priorIdx,1);
+    CONS_CUSTOM.push(entry);
+  }// base contact: deduplicated override
+  else{CONS_CUSTOM[idx-CONS.length]=entry;}
+  saveCustom();renderCons();closeMtxPanel();showT('Contact updated');
+}
+function doRemoveContact(){
+  const idx=parseInt(document.getElementById('co-rm-sel').value);if(isNaN(idx)){showT('Select a contact first');return}
+  if(idx<CONS.length){CONS_CUSTOM.push({...getCONS()[idx],_removed:true});}
+  else{CONS_CUSTOM.splice(idx-CONS.length,1);}
+  saveCustom();renderCons();closeMtxPanel();showT('Contact removed');
+}
+// Override getCONS to filter removed markers
+function getCONS(){
+  const removedKeys=new Set(CONS_CUSTOM.filter(x=>x._removed).map(x=>`${x.n}|${x.r}|${x.e}`));
+  const base=CONS.filter(c=>!removedKeys.has(`${c.n}|${c.r}|${c.e}`));
+  return [...base,...CONS_CUSTOM.filter(x=>!x._removed)];
+}
 </script>
 </body>
 </html>
