@@ -154,9 +154,8 @@ select option{white-space:normal;word-break:break-word}
   <aside class="side">
     <div class="slogo"><h1>DOA Tracker</h1><p>Ben Line Group</p></div>
     <nav class="snav">
-      <div class="ni active" onclick="go('dashboard',this)"><span class="ndot"></span>Dashboard</div>
+      <div class="ni active" onclick="go('dashboard',this)"><span class="ndot"></span>Dashboard <span class="nbadge" id="bopen">0</span></div>
       <div class="ni" onclick="go('new',this)"><span class="ndot"></span>New Request</div>
-      <div class="ni" onclick="go('reqs',this)"><span class="ndot"></span>My Requests <span class="nbadge" id="bopen">0</span></div>
       <div class="ni" onclick="go('matrix',this)"><span class="ndot"></span>DOA Matrix</div>
       <div class="ni" onclick="go('contacts',this)"><span class="ndot"></span>Contacts</div>
     </nav>
@@ -179,7 +178,15 @@ select option{white-space:normal;word-break:break-word}
         <div class="sc"><div class="sl">Completed</div><div class="sv" id="st4" style="color:var(--gr)">0</div><div class="sc-sub">Fully approved</div></div>
       </div>
       <div class="ib">💡 <strong>How it works:</strong> Submit a request → system shows required approvers by level → send Level 5 emails first → only after Level 5 is fully approved do Level 4 emails unlock → track each response here.</div>
-      <div class="pt">Recent activity</div>
+      <div class="ph" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:18px 0 10px">
+        <div class="pt" style="margin:0">Your requests</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="btn" id="export-select-btn" onclick="toggleExportMode()" style="font-size:11px;border-color:var(--bl);color:var(--bl)">☐ Export</button>
+          <button class="btn btn-p" id="export-confirm-btn" onclick="exportSelectedPDF()" style="display:none;font-size:11px">⬇ Export Selected</button>
+          <button class="btn" id="export-cancel-btn" onclick="cancelExportMode()" style="display:none;font-size:11px">Cancel</button>
+          <span id="export-count-label" style="display:none;font-size:10px;color:var(--tx3)">0 selected</span>
+        </div>
+      </div>
       <div id="dash-list"></div>
     </div>
 
@@ -219,20 +226,6 @@ select option{white-space:normal;word-break:break-word}
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- MY REQUESTS -->
-    <div class="page" id="page-reqs">
-      <div class="ph" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div><h2>My Requests</h2><p>All DOA requests you have submitted</p></div>
-        <div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap">
-          <button class="btn" id="export-select-btn" onclick="toggleExportMode()" style="font-size:11px;border-color:var(--bl);color:var(--bl)">☐ Export</button>
-          <button class="btn btn-p" id="export-confirm-btn" onclick="exportSelectedPDF()" style="display:none;font-size:11px">⬇ Export Selected</button>
-          <button class="btn" id="export-cancel-btn" onclick="cancelExportMode()" style="display:none;font-size:11px">Cancel</button>
-          <span id="export-count-label" style="display:none;font-size:10px;color:var(--tx3)">0 selected</span>
-        </div>
-      </div>
-      <div id="reqs-list"></div>
     </div>
 
     <!-- DOA MATRIX -->
@@ -11743,6 +11736,62 @@ let mf={s:'',a:'',t:''};let rf={s:'',st:''};
 function ini(n){return(n||'?').split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase()}
 function now(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function save(){localStorage.setItem('doa_reqs',JSON.stringify(reqs))}
+// ── INDEXEDDB FILE STORE (large files; replaces 5MB localStorage limit) ──
+let _idb=null;
+function idbOpen(){return new Promise((res,rej)=>{if(_idb)return res(_idb);const rq=indexedDB.open('doa_files',1);rq.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('files'))db.createObjectStore('files');};rq.onsuccess=e=>{_idb=e.target.result;res(_idb);};rq.onerror=e=>rej(e);});}
+async function idbPut(id,blob){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(blob,id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);});}
+async function idbGet(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readonly');const rq=tx.objectStore('files').get(id);rq.onsuccess=()=>res(rq.result||null);rq.onerror=e=>rej(e);});}
+async function idbDel(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);});}
+// Resolve a file record to a Blob, supporting both new (IndexedDB) and legacy (base64 in record) storage.
+async function getFileBlob(f){let b=null;try{b=await idbGet(f.id);}catch(e){}if(!b&&f.data){try{b=await(await fetch(f.data)).blob();}catch(e){}}return b;}
+// One-time migration: move any legacy base64 file data out of localStorage into IndexedDB.
+async function migrateFilesToIDB(){let changed=false;for(const r of reqs){for(const a of(r.apvs||[])){for(const f of(a.files||[])){if(f.data){try{const blob=await(await fetch(f.data)).blob();await idbPut(f.id,blob);f.size=blob.size;delete f.data;changed=true;}catch(e){}}}}}if(changed)save();}
+// ── SELF-CONTAINED ZIP BUILDER (store method, no compression, no external library) ──
+const _crcTable=(()=>{let c,t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function _crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=_crcTable[(c^u8[i])&0xFF]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+function makeZip(entries){const enc=new TextEncoder();const parts=[];const central=[];let offset=0;const dosT=0,dosD=0x21;
+  entries.forEach(e=>{const nb=enc.encode(e.name);const crc=_crc32(e.u8);const sz=e.u8.length;
+    const lh=new Uint8Array(30+nb.length);const dv=new DataView(lh.buffer);
+    dv.setUint32(0,0x04034b50,true);dv.setUint16(4,20,true);dv.setUint16(6,0,true);dv.setUint16(8,0,true);dv.setUint16(10,dosT,true);dv.setUint16(12,dosD,true);dv.setUint32(14,crc,true);dv.setUint32(18,sz,true);dv.setUint32(22,sz,true);dv.setUint16(26,nb.length,true);dv.setUint16(28,0,true);lh.set(nb,30);
+    parts.push(lh,e.u8);
+    const cd=new Uint8Array(46+nb.length);const cv=new DataView(cd.buffer);
+    cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0,true);cv.setUint16(10,0,true);cv.setUint16(12,dosT,true);cv.setUint16(14,dosD,true);cv.setUint32(16,crc,true);cv.setUint32(20,sz,true);cv.setUint32(24,sz,true);cv.setUint16(28,nb.length,true);cv.setUint16(30,0,true);cv.setUint16(32,0,true);cv.setUint16(34,0,true);cv.setUint16(36,0,true);cv.setUint32(38,0,true);cv.setUint32(42,offset,true);cd.set(nb,46);
+    central.push(cd);offset+=lh.length+e.u8.length;});
+  const cSize=central.reduce((s,c)=>s+c.length,0),cOff=offset;
+  const eocd=new Uint8Array(22);const ev=new DataView(eocd.buffer);
+  ev.setUint32(0,0x06054b50,true);ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);ev.setUint32(12,cSize,true);ev.setUint32(16,cOff,true);
+  return new Blob([...parts,...central,eocd],{type:'application/zip'});}
+function _safeName(s){return(s||'').replace(/[^a-z0-9._-]+/gi,'-').replace(/^-+|-+$/g,'');}
+function buildSummaryText(r){const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
+  let s=`DOA REQUEST — ${getMref(r)}\r\n${r.sub}\r\n`;
+  s+=`Scope: ${r.scope||'Group'} | Area: ${r.area} / ${r.cat}\r\n`;
+  s+=`Submitted: ${r.dt} by ${r.sb} | Country: ${r.co||'Group'} | Status: ${r.status}\r\n`;
+  s+=`\r\nPURPOSE:\r\n${r.purpose||'-'}\r\n`;
+  s+=`\r\nDECISIONS SO FAR:\r\n`;
+  r.apvs.filter(x=>isApv(x.t)).forEach(a=>{s+=`- [${lvN[a.lv]||'L'+a.lv}] ${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''}: ${a.st}${a.cm?` — ${a.cm}`:''}${a.at?` (${a.at})`:''}\r\n`;});
+  let anyF=false;let fl='\r\nUPLOADED FILES INCLUDED IN THIS PACK:\r\n';
+  r.apvs.forEach(a=>(a.files||[]).forEach(f=>{anyF=true;fl+=`- ${f.name} (L${a.lv} — ${a.r})\r\n`;}));
+  s+=anyF?fl:'\r\nUPLOADED FILES: none\r\n';
+  s+=`\r\nGenerated ${now()} from DOA Tracker.\r\n`;
+  return s;}
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=name;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+// Big centered on-screen reminder (used after Send / Remind / Notify).
+function showCenter(msg){let el=document.getElementById('centerMsg');if(!el){el=document.createElement('div');el.id='centerMsg';el.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:600;pointer-events:none';document.body.appendChild(el);}el.innerHTML=`<div style="background:var(--ac);color:#fff;padding:18px 26px;border-radius:12px;font-size:15px;font-weight:500;box-shadow:0 10px 40px rgba(0,0,0,.35);max-width:78%;text-align:center;line-height:1.4">${msg}</div>`;el.style.display='flex';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},4000);}
+// Gather every uploaded file in the request (all levels) + a summary, zip them, and download.
+// Always downloads something: the ZIP when files exist, otherwise a summary .txt. Returns true if any files were included.
+async function buildAndDownloadPack(r){
+  const list=[];(r.apvs||[]).forEach(x=>(x.files||[]).forEach(f=>list.push({lv:x.lv,role:x.r,f})));
+  const fileEntries=[];
+  for(const it of list){const blob=await getFileBlob(it.f);if(!blob)continue;const u8=new Uint8Array(await blob.arrayBuffer());fileEntries.push({name:`L${it.lv}_${_safeName(it.role)}/${_safeName(it.f.name)}`,u8});}
+  const summaryBytes=new TextEncoder().encode(buildSummaryText(r));
+  const hadFiles=fileEntries.length>0;
+  if(hadFiles){
+    const zip=makeZip([{name:'00_decisions_summary.txt',u8:summaryBytes},...fileEntries]);
+    downloadBlob(zip,`${getMref(r)}_pack.zip`);
+  }else{
+    downloadBlob(new Blob([summaryBytes],{type:'text/plain'}),`${getMref(r)}_summary.txt`);
+  }
+  return hadFiles;}
 function tc(t){if(t==='Approval')return 'bb';if(t==='Scope Approval')return 'bp';if(t==='Inform'||t==='Scope Inform')return 'bgr';return 'bw'}
 function getCon(role,country){const allC=getCONS();if(country){const c=allC.find(x=>x.r===role&&x.co===country);if(c)return c}return allC.find(x=>x.r===role)||{n:role,e:'unknown@benline.com'}}
 function getActiveLv(req){
@@ -11851,7 +11900,7 @@ function submitReq(){
   const req={id:'R'+_ts,mref:_mref,sub:title,sb:n,se:e,co,scope,area,cat,action:sub,purpose,apvs,status:'In Progress',dt:now(),notes:[]};
   reqs.unshift(req);save();clearForm();renderAll();
   showT('Request submitted successfully');
-  go('reqs',document.querySelectorAll('.ni')[2]);
+  go('dashboard',document.querySelectorAll('.ni')[0]);
   setTimeout(()=>openModal(req.id),200);
 }
 function clearForm(){
@@ -11863,7 +11912,7 @@ function clearForm(){
   document.getElementById('ssub').innerHTML='<option value="">— select category first —</option>';document.getElementById('ssub').disabled=true;
   document.getElementById('rpurpose').value='';document.getElementById('amap').style.display='none';
 }
-function renderAll(){renderDash();renderReqs();renderMatrix();renderCons();updateBadges()}
+function renderAll(){renderDash();renderMatrix();renderCons();updateBadges()}
 function updateBadges(){
   const op=reqs.filter(r=>r.status==='In Progress').length;
   const bo=document.getElementById('bopen');bo.textContent=op;bo.style.display=op?'inline-block':'none';
@@ -11874,9 +11923,12 @@ function renderDash(){
   const dn=reqs.filter(r=>r.status==='Approved').length;
   document.getElementById('st1').textContent=op;document.getElementById('st2').textContent=pe;
   document.getElementById('st4').textContent=dn;
-  const el=document.getElementById('dash-list');
+  const el=document.getElementById('dash-list');if(!el)return;
+  let rs=reqs.filter(r=>r.sb===me?.n||r.se===me?.e);
+  if(rf.s)rs=rs.filter(r=>(r.sub+r.area+r.id).toLowerCase().includes(rf.s.toLowerCase()));
+  if(rf.st)rs=rs.filter(r=>r.status===rf.st);
   if(!reqs.length){el.innerHTML='<div class="es">No requests yet. Click <strong>New Request</strong> to start.</div>';return}
-  el.innerHTML=reqs.slice(0,5).map(r=>rrow(r)).join('');
+  el.innerHTML=rs.length?rs.map(r=>rrow(r)).join(''):'<div class="es">No requests match your filter.</div>';
 }
 function rrow(r){
   const apvs=r.apvs.filter(a=>isApv(a.t));
@@ -11908,12 +11960,7 @@ function rrow(r){
     ${!isRej?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${dn}/${total} approvals · ${activeApvs.filter(a=>a.st==='Pending').length} pending${naApvs.length?` · ${naApvs.length} N.A (skipped)`:''}</div>`:''}
   </div>`;
 }
-function renderReqs(){
-  let rs=reqs.filter(r=>r.sb===me?.n||r.se===me?.e);
-  if(rf.s)rs=rs.filter(r=>(r.sub+r.area+r.id).toLowerCase().includes(rf.s.toLowerCase()));
-  if(rf.st)rs=rs.filter(r=>r.status===rf.st);
-  document.getElementById('reqs-list').innerHTML=rs.length?rs.map(r=>rrow(r)).join(''):'<div class="es">No requests found. Submit a new request to get started.</div>';
-}
+function renderReqs(){renderDash();}
 function openModal(id){
   const r=reqs.find(x=>x.id===id);if(!r)return;
   const alv=getActiveLv(r);
@@ -11939,50 +11986,77 @@ function openModal(id){
       lvH+=`<div class="ml"><div class="mlh"><span class="badge ${lvRj?'br':lvDn?'bg':isAct?'bw':'bgr'}" style="font-size:11px">L${lv}</span>${lvN[lv]||'L'+lv}${isLk?` <span style="font-size:11px;color:var(--tx3)">Locked — Level ${lvN2+1} must complete first</span>`:''}${isAct&&!lvDn?' <span style="font-size:11px;color:var(--am)">Active — send emails now</span>':''}</div>`;
       apR.forEach(a=>{
         const sc=a.st==='Approved'?'bg':a.st==='Rejected'?'br':a.st==='N.A'?'bp':a.st==='Blocked'?'bgr':a.st==='Email Sent'?'bt':'bgr';
-        const ehCount=(a.emailHistory||[]).length;
         const fileCount=(a.files||[]).length;
         // A row is "locked" only when it is still unresolved AND a higher level above it is not complete.
         // Already-decided rows (Approved/Rejected/N.A) are never locked — they stay editable, even out of order.
         const rowUnresolved=(a.st==='Pending'||a.st==='Email Sent'||a.st==='Blocked');
         const locked=rowUnresolved&&(isLk||a.st==='Blocked');
-        const ehBtn=(a.sent&&!locked)?`<button class="btn btn-em" style="padding:5px 11px;font-size:12px;background:#e8eef8;border-color:var(--bl);color:var(--bl)" onclick="openEH('${id}','${a.r}','${a.lv}')">History${ehCount?` (${ehCount})`:''}${fileCount?` · ${fileCount} file${fileCount>1?'s':''}`:''}</button>`:'';
-        const canAttach=!locked&&a.st!=='Approved'&&a.st!=='Rejected'&&a.st!=='N.A';
-        const attachBtn=canAttach?`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openAttach('${id}','${a.r}','${a.lv}')">Attach</button>`:'';
+        const isDecided=(a.st==='Approved'||a.st==='Rejected'||a.st==='N.A');
+        // Upload (file management): always available, in any row state
+        const attachBtn=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${a.r}','${a.lv}')">Upload${fileCount?` (${fileCount})`:''}</button>`;
         const sendBtn=(!locked&&a.st==='Pending'&&r.status!=='Rejected')?`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Send</button>`:'';
         const remindBtn=(!locked&&a.st==='Email Sent'&&r.status!=='Rejected')?`<button class="btn" style="padding:5px 11px;font-size:12px;border-color:#7a4f00;color:var(--am)" onclick="sendReminder('${id}','${a.r}','${a.lv}')">Remind</button>`:'';
-        // Decision buttons appear only once the email has been sent, or the row was already decided.
-        // A Pending row that has NOT been emailed shows just Send + Attach (you can't decide before contacting).
-        const isDecided=(a.st==='Approved'||a.st==='Rejected'||a.st==='N.A');
-        const canShowDecide=!locked&&(a.st==='Email Sent'||a.sent||isDecided);
-        const decideBtns=canShowDecide?`
-        <button class="btn btn-ok btn-sm ${a.st==='Approved'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Approved')" style="padding:5px 12px;font-size:12px">${a.st==='Approved'?'Approved':'Approve'}</button>
-        <button class="btn btn-no btn-sm ${a.st==='Rejected'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Rejected')" style="padding:5px 12px;font-size:12px">${a.st==='Rejected'?'Rejected':'Reject'}</button>
-        <button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>
-      `:'';
-        const lockedHint=locked?`<span style="font-size:11px;color:var(--tx3);margin-left:6px">Locked — complete the level above first</span>`:'';
-        lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}</div><div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${locked?'Pending':a.st}</span>${sendBtn} ${remindBtn}${ehBtn}${attachBtn}${decideBtns}${lockedHint}</div></div>`;
+        // Approve / Reject: only once the email has been sent (or already decided). Never before contacting the approver.
+        const canRespond=!locked&&(a.st==='Email Sent'||a.sent||a.st==='Approved'||a.st==='Rejected');
+        const approveBtn=canRespond?`<button class="btn btn-ok btn-sm ${a.st==='Approved'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Approved')" style="padding:5px 12px;font-size:12px">${a.st==='Approved'?'Approved':'Approve'}</button>`:'';
+        const rejectBtn=canRespond?`<button class="btn btn-no btn-sm ${a.st==='Rejected'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Rejected')" style="padding:5px 12px;font-size:12px">${a.st==='Rejected'?'Rejected':'Reject'}</button>`:'';
+        // N.A ("skip, not needed") is only allowed for "Scope ..." actions — submitter decides if they apply.
+        // Plain (mandatory) approvals cannot be skipped.
+        const isScopeApv=/scope/i.test(a.t);
+        const naBtn=(isScopeApv||a.st==='N.A')?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
+        const lockedHint=locked?`<span style="font-size:11px;color:var(--tx3);margin-left:6px">Locked${isScopeApv?' — or mark N.A to skip':''}</span>`:'';
+        const typeBadge=`<span class="badge ${tc(a.t)}" style="font-size:9px;margin-left:6px">${a.t} · ${isScopeApv?'optional':'required'}</span>`;
+        lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}${typeBadge}</div><div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${locked?'Pending':a.st}</span>${sendBtn} ${remindBtn}${attachBtn}${approveBtn} ${rejectBtn} ${naBtn}${lockedHint}</div></div>`;
       });
       lvH+='</div>';
     }
-    inR.forEach(a=>{
-      // Inform rows are never locked by approval-level logic; they can be notified any time the request is active
-      const canNotify2=r.status!=='Rejected'&&a.st==='Pending';
-      const notifyBtn=canNotify2?`<button class="btn btn-em" style="margin-left:6px" onclick="sendOne('${id}','${a.r}','${a.lv}')">Notify</button>`:(a.st==='Pending'?`<span style="color:var(--tx3);margin-left:6px;font-size:12px">Locked — complete previous level first</span>`:'<span style="color:var(--gr);margin-left:6px;font-size:12px">Notified</span>');
-      lvH+=`<div class="minf"><span class="badge bgr" style="font-size:11px;margin-right:5px">L${lv}</span><span class="badge bw" style="font-size:11px;margin-right:5px">${a.t}</span><span style="font-size:11px;color:var(--tx3)">— notify only, no approval needed</span> <strong>${a.r}</strong>${a.n&&a.n!==a.r?` (${a.n})`:''} <span style="color:var(--tx3);font-size:12px">· ${a.re}</span> ${notifyBtn}</div>`;
+    // Group inform/consult rows by type within this level. Groups of >1 collapse to one "[type] all" row.
+    const infGroups={};
+    inR.forEach(a=>{(infGroups[a.t]=infGroups[a.t]||[]).push(a);});
+    Object.keys(infGroups).forEach(type=>{
+      const grp=infGroups[type];const isScopeInf=/scope/i.test(type);
+      if(grp.length===1){
+        const a=grp[0];
+        const canNotify2=r.status!=='Rejected'&&a.st==='Pending';
+        let infAction='';
+        if(a.st==='N.A'){infAction='';}
+        else if(canNotify2){infAction=`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Notify</button>`;}
+        else if(a.st==='Pending'){infAction=`<span style="color:var(--tx3);font-size:12px">Locked — complete previous level first</span>`;}
+        else{infAction='<span style="color:var(--gr);font-size:12px">Notified</span>';}
+        const infNa=isScopeInf?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
+        const infUpload=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${a.r}','${a.lv}')">Upload${(a.files||[]).length?` (${(a.files||[]).length})`:''}</button>`;
+        lvH+=`<div class="minf" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><div style="flex:1;min-width:0"><span class="badge bgr" style="font-size:11px;margin-right:5px">L${lv}</span><span class="badge bw" style="font-size:11px;margin-right:5px">${a.t}</span><span style="font-size:11px;color:var(--tx3)">— notify only${isScopeInf?', or N.A to skip':''}</span> <strong>${a.r}</strong>${a.n&&a.n!==a.r?` (${a.n})`:''} <span style="color:var(--tx3);font-size:12px">· ${a.re}</span></div><div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${infAction}${infUpload}${infNa}</div></div>`;
+      } else {
+        // Merged group — one action for everyone of this type at this level
+        const allNa=grp.every(a=>a.st==='N.A');
+        const anyPending=grp.some(a=>a.st==='Pending');
+        const canNotifyAll=r.status!=='Rejected'&&anyPending;
+        const tEsc=type.replace(/'/g,"\\'");
+        const label=`${type.replace(/^Scope /i,'')} all`;
+        let actionAll='';
+        if(allNa){actionAll='';}
+        else if(canNotifyAll){actionAll=`<button class="btn btn-em" onclick="notifyAll('${id}','${lv}','${tEsc}')">${label}</button>`;}
+        else{actionAll='<span style="color:var(--gr);font-size:12px">All notified</span>';}
+        const naAllBtn=isScopeInf?`<button class="btn btn-sm ${allNa?'selected':''}" onclick="naAll('${id}','${lv}','${tEsc}')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${allNa?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${allNa?'N.A all ✓':'N.A all'}</button>`:'';
+        const grpRoleEsc=grp[0].r.replace(/'/g,"\\'");
+        const grpUpload=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${grpRoleEsc}','${lv}')">Upload${(grp[0].files||[]).length?` (${(grp[0].files||[]).length})`:''}</button>`;
+        const names=grp.map(a=>`${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''}`).join(' · ');
+        lvH+=`<div class="minf" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap"><div style="flex:1;min-width:0"><span class="badge bgr" style="font-size:11px;margin-right:5px">L${lv}</span><span class="badge bw" style="font-size:11px;margin-right:5px">${type}</span><span style="font-size:11px;color:var(--tx3)">— ${grp.length} recipients, notify only${isScopeInf?', or N.A to skip':''}</span><div style="font-size:11px;color:var(--tx2);margin-top:4px;line-height:1.5">${names}</div></div><div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${actionAll}${grpUpload}${naAllBtn}</div></div>`;
+      }
     });
   });
   const thrH=r.notes.map(nt=>`<div class="tm"><div class="tav">${ini(nt.f)}</div><div class="tb ${nt.f===me?.n?'mine':''}"><div class="tw">${nt.f}</div><div class="tt">${nt.x}</div><div class="ti">${nt.at}</div></div></div>`).join('')||'<div style="font-size:11px;color:var(--tx3)">No notes yet.</div>';
-  document.getElementById('mb').innerHTML=`<h3>${r.sub}</h3><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--ac);font-weight:600;margin:2px 0 4px">Ref: ${getMref(r)}</div><div class="mm">${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · <strong>${r.status}</strong> · ${r.dt} by ${r.sb}</div>${r.purpose?`<div style="background:var(--sur2);border-radius:var(--rs);padding:8px 11px;font-size:12px;color:var(--tx2);margin-bottom:12px"><strong>Purpose:</strong> ${r.purpose}</div>`:''}<div style="margin-bottom:12px"><div style="font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Approval sequence — level by level</div><div class="seq">${seqH||'<span class="badge bg">No sequential approvals</span>'}</div></div>${lvH}<div class="thr"><div class="tht">Notes & activity</div>${thrH}<div class="rb"><textarea id="ntxt-${id}" placeholder="Add a note, record a response, log an update..."></textarea><div class="ras"><button class="btn btn-p" style="padding:7px 14px;font-size:13px" onclick="addNote('${id}')">Add note</button><button class="btn" style="padding:7px 13px;font-size:13px;border-color:var(--tl);color:var(--tl)" onclick="exportSingleReqPDF('${id}')">PDF</button>${(r.sb===me?.n||r.se===me?.e)?`<button class="btn btn-no" style="padding:7px 13px;font-size:13px" onclick="deleteReq('${id}')">Delete request</button>`:''}<button class="btn" style="padding:7px 13px;font-size:13px" onclick="closeMo()">Close</button></div></div></div>`;
+  document.getElementById('mb').innerHTML=`<h3>${r.sub}</h3><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--ac);font-weight:600;margin:2px 0 4px">Ref: ${getMref(r)}</div><div class="mm">${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · <strong>${r.status}</strong> · ${r.dt} by ${r.sb}</div><div style="display:flex;gap:6px;margin:10px 0 4px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" style="padding:6px 13px;font-size:12px;border-color:var(--tl);color:var(--tl)" onclick="exportSingleReqPDF('${id}')">Export PDF</button>${(r.sb===me?.n||r.se===me?.e)?`<button class="btn btn-no" style="padding:6px 13px;font-size:12px" onclick="deleteReq('${id}')">Delete request</button>`:''}</div>${r.purpose?`<div style="background:var(--sur2);border-radius:var(--rs);padding:8px 11px;font-size:12px;color:var(--tx2);margin-bottom:12px"><strong>Purpose:</strong> ${r.purpose}</div>`:''}<div style="margin-bottom:12px"><div style="font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Approval sequence — level by level</div><div class="seq">${seqH||'<span class="badge bg">No sequential approvals</span>'}</div></div>${lvH}<div class="thr"><div class="tht">Notes & activity</div>${thrH}<div class="rb"><textarea id="ntxt-${id}" placeholder="Add a note, record a response, log an update..."></textarea><div class="ras"><button class="btn btn-p" style="padding:7px 14px;font-size:13px" onclick="addNote('${id}')">Add note</button><button class="btn" style="padding:7px 13px;font-size:13px" onclick="closeMo()">Close</button></div></div></div>`;
   document.getElementById('mo').classList.add('open');
 }
-function sendOne(reqId,role,lv){
+async function sendOne(reqId,role,lv){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
   const alv=getActiveLv(r);
   if(r.status==='Rejected'){showT('Cannot send — request has been rejected');return}
   // block sending a locked row (a higher level is not complete yet)
   if(isApv(a.t)&&alv!==null&&a.lv<alv){showT('Locked — Level '+alv+' must be completed first');return}
   const to=a.re;
-  const refCode=`[REF: ${reqId}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
+  const refCode=`[REF: ${getMref(r)}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
   // Collect all files from higher levels for auto-carry reminder
   const higherLvFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length).flatMap(x=>(x.files||[]).map(f=>`  • ${f.name} (from L${x.lv} — ${x.r})`));
   const attachNote=higherLvFiles.length?`\n\nATTACHMENTS FROM PRIOR LEVELS (please attach to this email):\n${higherLvFiles.join('\n')}`:'';
@@ -12001,14 +12075,15 @@ function sendOne(reqId,role,lv){
   }
   const bodyText=`Dear ${a.n||a.r},\n\n${getOpeningPara(a.t)}\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.${attachNote}\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${getClosingPara(a.t)}\n\nThank you,\n${r.sb}`;
   const body=encodeURIComponent(bodyText);
-  window.open(`mailto:${to}?subject=${subj}&body=${body}`);
-  try{navigator.clipboard.writeText(bodyText)}catch(e){}
-  // Store in email history
-  if(!a.emailHistory)a.emailHistory=[];
-  a.emailHistory.push({type:'sent',from:r.sb,to:a.re,subject:`[${mref}] [${isInf(a.t)?'NOTIFY':'ACTION REQUIRED'}] ${r.sub} ${refCode}`,body:bodyText,at:now(),refCode});
+  // Two jobs from one click: (1) build a ZIP of all uploaded files for this request and download it,
+  // (2) open Outlook pre-filled. ZIP first so the download fires before the mail handoff.
+  let hadFiles=false;
+  try{hadFiles=await buildAndDownloadPack(r);}catch(e){showT('Could not build attachment pack');}
+  window.location.href=`mailto:${to}?subject=${subj}&body=${body}`;
   a.sent=true;if(a.st==='Pending')a.st='Email Sent';
-  r.notes.push({f:'System',x:`Email sent to ${a.r} (${a.re}) — ${refCode}`,at:now()});
-  save();renderAll();openModal(reqId);showT('Email opened for '+a.r);
+  r.notes.push({f:'System',x:`Email opened for ${a.r} (${a.re})${hadFiles?' + attachment pack downloaded':''} — ${refCode}`,at:now()});
+  save();renderAll();openModal(reqId);
+  showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the Outlook email before sending.':'Summary downloaded.<br>Drag it into the Outlook email before sending.');
 }
 function recomputeStatus(r){
   // Single source of truth for request status, derived from approval rows only.
@@ -12087,21 +12162,59 @@ function renderCons(){
 function fReqs(v){rf.s=v;renderReqs()}function fReqsSt(v){rf.st=v;renderReqs()}
 function closeMo(){document.getElementById('mo').classList.remove('open')}
 function closeMoBg(e){if(e.target===document.getElementById('mo'))closeMo()}
-function showT(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
-function sendReminder(reqId,role,lv){
+function showT(msg){let el=document.getElementById('centerMsg');if(!el){el=document.createElement('div');el.id='centerMsg';el.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:600;pointer-events:none';document.body.appendChild(el);}el.innerHTML=`<div style="background:var(--ac);color:#fff;padding:13px 22px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:80%;text-align:center;line-height:1.4">${msg}</div>`;el.style.display='flex';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},2600);}
+async function sendReminder(reqId,role,lv){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  const refCode=`[REF: ${reqId}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
+  const refCode=`[REF: ${getMref(r)}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
   const mref=getMref(r);
   const subj=encodeURIComponent(`[${mref}] [REMINDER] ${r.sub} — Awaiting your ${a.t} ${refCode}`);
   const isInfT=isInf(a.t);
   const reminderClose=isInfT?`If you have any comments or questions, please reply at your earliest convenience. Otherwise no action is required.`:`Please reply to this email with your decision (Approved / Not Approved) at your earliest convenience.\n\nPlease keep the reference code in the subject line when replying.`;
   const bodyText=`Dear ${a.n||a.r},\n\nThis is a gentle reminder regarding the following action which is awaiting your ${a.t}.\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${reminderClose}\n\nThank you,\n${r.sb}`;
   const body=encodeURIComponent(bodyText);
-  window.open(`mailto:${a.re}?subject=${subj}&body=${body}`);
-  if(!a.emailHistory)a.emailHistory=[];
-  a.emailHistory.push({type:'reminder',from:r.sb,to:a.re,subject:`[${mref}] [REMINDER] ${r.sub} ${refCode}`,body:bodyText,at:now(),refCode});
-  r.notes.push({f:'System',x:`Reminder sent to ${a.r} — ${refCode}`,at:now()});
-  save();renderAll();openModal(reqId);showT('Reminder sent to '+a.r);
+  let hadFiles=false;
+  try{hadFiles=await buildAndDownloadPack(r);}catch(e){showT('Could not build attachment pack');}
+  window.location.href=`mailto:${a.re}?subject=${subj}&body=${body}`;
+  r.notes.push({f:'System',x:`Reminder sent to ${a.r}${hadFiles?' + attachment pack downloaded':''} — ${refCode}`,at:now()});
+  save();renderAll();openModal(reqId);
+  showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the reminder email before sending.':'Summary downloaded.<br>Drag it into the reminder email before sending.');
+}
+// Notify everyone of one inform/consult type at one level in a single email (all in TO:, "Dear all,").
+async function notifyAll(reqId,lv,type){
+  const r=reqs.find(x=>x.id===reqId);if(!r)return;
+  if(r.status==='Rejected'){showT('Cannot send — request has been rejected');return}
+  const grp=r.apvs.filter(x=>x.lv===parseInt(lv)&&x.t===type&&isInf(x.t));if(!grp.length)return;
+  const tos=grp.map(x=>x.re).filter(Boolean).join(',');
+  const mref=getMref(r);
+  const refCode=`[REF: ${getMref(r)}-L${lv}-${type.replace(/[^A-Za-z]/g,'')}]`;
+  const subj=encodeURIComponent(`[${mref}] [NOTIFY] ${r.sub} ${refCode}`);
+  const consult=/consult/i.test(type);
+  const opening=consult?`This email is to inform and consult with you on the following action under the Ben Line Delegation of Authority policy.\n\nWhile no formal approval is required, your input and feedback are valued. Please feel free to share any comments or concerns.`:`This email is to inform you of the following action under the Ben Line Delegation of Authority policy.\n\nThis is for your information only — no action or response is required from you.`;
+  const closing=consult?`Please share any comments or concerns at your earliest convenience. If we do not hear from you, we will proceed with this action.`:`No further action is required from you. This email is for your records.`;
+  const bodyText=`Dear all,\n\n${opening}\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.\n────────────────────────────\nLEVEL:      L${lv}\nACTION:     ${type}\n────────────────────────────\n\n${closing}\n\nThank you,\n${r.sb}`;
+  const body=encodeURIComponent(bodyText);
+  let hadFiles=false;
+  try{hadFiles=await buildAndDownloadPack(r);}catch(e){showT('Could not build attachment pack');}
+  window.location.href=`mailto:${tos}?subject=${subj}&body=${body}`;
+  grp.forEach(a=>{a.sent=true;if(a.st==='Pending')a.st='Email Sent';});
+  r.notes.push({f:'System',x:`Notified ${grp.length} recipient(s) at L${lv} (${type})${hadFiles?' + attachment pack downloaded':''} — ${refCode}`,at:now()});
+  save();renderAll();openModal(reqId);
+  showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the Outlook email before sending.':'Summary downloaded.<br>Drag it into the Outlook email before sending.');
+}
+// Mark/unmark every recipient of one inform type at one level as N.A in one click.
+function naAll(reqId,lv,type){
+  const r=reqs.find(x=>x.id===reqId);if(!r)return;
+  const grp=r.apvs.filter(x=>x.lv===parseInt(lv)&&x.t===type&&isInf(x.t));if(!grp.length)return;
+  const allNa=grp.every(a=>a.st==='N.A');
+  if(allNa){
+    grp.forEach(a=>{a.st=a.sent?'Email Sent':'Pending';a.cm='';a.at=null;});
+    r.notes.push({f:me?.n||'User',x:`Cancelled N.A for ${grp.length} recipient(s) at L${lv} (${type})`,at:now()});
+  }else{
+    const reason=prompt('Reason for N.A (applies to all in this group):')||'N/A';
+    grp.forEach(a=>{a.st='N.A';a.cm=reason;a.at=now();});
+    r.notes.push({f:me?.n||'User',x:`N.A for ${grp.length} recipient(s) at L${lv} (${type}): ${reason}`,at:now()});
+  }
+  recomputeStatus(r);save();renderAll();openModal(reqId);
 }
 // ── ADMIN PIN ──
 const ADMIN_PIN='1234'; // change this to your preferred PIN
@@ -12146,84 +12259,56 @@ function removeApv(reqId,role,lv){
 }
 function clearAllData(){if(!confirm("This will delete ALL your saved requests and log you out. Are you sure?"))return;localStorage.clear();location.reload();}
 
-// ── EMAIL HISTORY & FILE ATTACH ──
-function openEH(reqId,role,lv){
+// ── FILE UPLOAD (stored in IndexedDB; carried into the ZIP pack on Send) ──
+function fmtSize(b){if(b==null)return'';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(0)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function openUpload(reqId,role,lv){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  if(!a.emailHistory)a.emailHistory=[];
   if(!a.files)a.files=[];
-  // Collect carry-forward files from higher levels
+  // Files already uploaded at prior (higher) levels — these are also carried in the ZIP pack automatically.
   const higherFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length);
-  const carryHtml=higherFiles.length?`<div class="carry-banner"><strong>Attachments from prior levels</strong> — include these when sending next level emails:<br>${higherFiles.flatMap(x=>(x.files||[]).map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${x.r}','${x.lv}','${f.id}')">${f.name} <span style="color:var(--tx3)">(L${x.lv} — ${x.r})</span></span>`)).join('')}</div>`:'';
-  const histHtml=a.emailHistory.length?a.emailHistory.map((e,i)=>`<div class="eh-entry ${e.type==='reply'?'eh-reply':e.type==='sent'?'eh-sent':'eh-sent'}">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <span style="font-size:10px;font-weight:600;color:${e.type==='reply'?'var(--gr)':e.type==='reminder'?'var(--am)':'var(--bl)'}">${e.type==='reply'?'Reply received':e.type==='reminder'?'Reminder sent':'Email sent'}</span>
-      <span style="font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace">${e.at}</span>
-    </div>
-    <div style="font-size:10px;color:var(--tx2);margin-bottom:3px">From: <strong>${e.from}</strong> → To: ${e.to}</div>
-    <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Subject: ${e.subject||''}</div>
-    <pre style="font-size:10px;white-space:pre-wrap;word-break:break-word;background:var(--bg);padding:7px 9px;border-radius:4px;border:.5px solid var(--bdr);max-height:140px;overflow-y:auto;font-family:'DM Sans',sans-serif;color:var(--tx2)">${(e.body||'').replace(/</g,'&lt;')}</pre>
-    ${(e.files||[]).length?`<div style="margin-top:4px">${e.files.map(f=>`<span class="eh-file">📄 ${f.name}</span>`).join('')}</div>`:''}
-  </div>`).join(''):`<div style="font-size:11px;color:var(--tx3);padding:12px 0">No email history yet. Send the first email to start tracking.</div>`;
-  const fileHtml=a.files.length?`<div style="margin-top:6px"><div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:4px">Attached files (${a.files.length}):</div>${a.files.map((f,i)=>`<span class="eh-file" onclick="viewFile('${reqId}','${role}','${lv}','${f.id}')">📄 ${f.name}</span> <span style="font-size:9px;color:var(--rd);cursor:pointer" onclick="removeFile('${reqId}','${role}','${lv}','${f.id}')">✕</span>`).join(' ')}</div>`:'';
+  const carryHtml=higherFiles.length?`<div class="carry-banner"><strong>Files from prior levels</strong> — these are bundled into the ZIP automatically when you Send:<br>${higherFiles.flatMap(x=>(x.files||[]).map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${x.r}','${x.lv}','${f.id}')">${f.name} <span style="color:var(--tx3)">(L${x.lv} — ${x.r})</span></span>`)).join('')}</div>`:'';
+  const fileHtml=a.files.length?`<div style="margin-top:10px"><div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:4px">Uploaded files (${a.files.length}):</div>${a.files.map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${role}','${lv}','${f.id}')">📄 ${f.name}${f.size?` <span style="color:var(--tx3)">${fmtSize(f.size)}</span>`:''}</span> <span style="font-size:9px;color:var(--rd);cursor:pointer" onclick="removeFile('${reqId}','${role}','${lv}','${f.id}')" title="Remove">✕</span>`).join(' ')}</div>`:`<div style="font-size:11px;color:var(--tx3);padding:8px 0">No files uploaded for this approver yet.</div>`;
   document.getElementById('ehmb').innerHTML=`
-    <h3 style="font-size:15px;font-weight:600;margin-bottom:2px">Email History</h3>
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:2px">Upload files</h3>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''} · L${lv} · ${a.t}</div>
     ${carryHtml}
-    <div style="font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Exchange log</div>
-    ${histHtml}
-    <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--bdr)">
-      <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px">Paste a reply you received:</div>
-      <textarea id="eh-reply-txt" style="width:100%;padding:7px 9px;border:.5px solid var(--bdr2);border-radius:var(--rs);font-size:11px;font-family:'DM Sans',sans-serif;resize:vertical;min-height:70px;color:var(--tx);background:var(--sur)" placeholder="Paste the reply email content here..."></textarea>
-      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-        <button class="btn btn-p" style="font-size:11px;padding:5px 12px" onclick="saveReply('${reqId}','${role}','${lv}')">Save Reply</button>
-        <label class="btn" style="font-size:13px;padding:6px 13px;cursor:pointer;color:var(--tl);border-color:var(--tl)">Attach File<input type="file" style="display:none" multiple onchange="attachFiles(event,'${reqId}','${role}','${lv}')"/></label>
-        <button class="btn" style="font-size:11px" onclick="closeEh()">Close</button>
-      </div>
-      ${fileHtml}
-      <div style="font-size:9px;color:var(--tx3);margin-top:6px">⚠ Files stored in browser (localStorage ~5MB limit). Use for screenshots or small PDFs only.</div>
-    </div>`;
+    <div style="font-size:11px;color:var(--tx2);margin:6px 0 8px">Upload supporting documents or a saved email exchange (drag the email out of Outlook to your desktop first, then choose it here). Everything uploaded across all levels is gathered into one ZIP when you click <strong>Send</strong>.</div>
+    <label class="btn" style="font-size:13px;padding:7px 14px;cursor:pointer;color:var(--tl);border-color:var(--tl)">Choose files<input type="file" style="display:none" multiple onchange="attachFiles(event,'${reqId}','${role}','${lv}')"/></label>
+    <button class="btn" style="font-size:13px;padding:7px 13px;margin-left:6px" onclick="closeEh()">Close</button>
+    ${fileHtml}
+    <div style="font-size:9px;color:var(--tx3);margin-top:8px">Stored locally in this browser (IndexedDB). Up to 50 MB per file. Note: Outlook usually rejects emails over ~20–25 MB total, so keep the combined attachments under that to send successfully.</div>`;
   document.getElementById('ehmo').classList.add('open');
 }
-function openAttach(reqId,role,lv){openEH(reqId,role,lv);}
-function saveReply(reqId,role,lv){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  const txt=document.getElementById('eh-reply-txt').value.trim();if(!txt){showT('Paste reply content first');return;}
-  if(!a.emailHistory)a.emailHistory=[];
-  a.emailHistory.push({type:'reply',from:a.n||a.r,to:r.sb,body:txt,at:now()});
-  r.notes.push({f:'System',x:`Reply from ${a.r} logged in email history`,at:now()});
-  save();renderAll();openEH(reqId,role,lv);showT('Reply saved');
-}
-function attachFiles(event,reqId,role,lv){
+function openAttach(reqId,role,lv){openUpload(reqId,role,lv);}
+async function attachFiles(event,reqId,role,lv){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
   if(!a.files)a.files=[];
-  const files=Array.from(event.target.files);
-  let loaded=0;
-  files.forEach(file=>{
-    if(file.size>1.5*1024*1024){showT(`${file.name} too large — max 1.5MB per file`);loaded++;if(loaded===files.length){save();renderAll();openEH(reqId,role,lv);}return;}
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const fid='f'+Date.now()+Math.random().toString(36).slice(2,6);
-      a.files.push({id:fid,name:file.name,type:file.type,data:ev.target.result,at:now()});
-      r.notes.push({f:'System',x:`File attached: ${file.name} → ${a.r} (L${lv})`,at:now()});
-      loaded++;if(loaded===files.length){save();renderAll();openEH(reqId,role,lv);showT(`${files.length} file(s) attached`);}
-    };
-    reader.readAsDataURL(file);
-  });
+  const files=Array.from(event.target.files);const MAX=50*1024*1024;let added=0;
+  for(const file of files){
+    if(file.size>MAX){showT(`${file.name} too large — max 50 MB per file`);continue;}
+    const fid='f'+Date.now()+Math.random().toString(36).slice(2,6);
+    try{await idbPut(fid,file);a.files.push({id:fid,name:file.name,type:file.type,size:file.size,at:now()});r.notes.push({f:'System',x:`File uploaded: ${file.name} → ${a.r} (L${lv})`,at:now()});added++;}
+    catch(e){showT('Could not store '+file.name);}
+  }
+  save();renderAll();openUpload(reqId,role,lv);if(added)showT(`${added} file(s) uploaded`);
 }
-function viewFile(reqId,role,lv,fid){
+async function viewFile(reqId,role,lv,fid){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
   const f=(a.files||[]).find(x=>x.id===fid);if(!f)return;
-  const w=window.open('','_blank');
-  if(f.type&&f.type.startsWith('image/')){w.document.write(`<html><body style="margin:0;background:#000"><img src="${f.data}" style="max-width:100%;display:block;margin:auto"/></body></html>`);}
-  else{const link=w.document.createElement('a');link.href=f.data;link.download=f.name;w.document.body.appendChild(link);link.click();}
+  const blob=await getFileBlob(f);if(!blob){showT('File not found');return;}
+  const url=URL.createObjectURL(blob);
+  if(f.type&&f.type.startsWith('image/')){const w=window.open('','_blank');if(w)w.document.write(`<html><body style="margin:0;background:#000"><img src="${url}" style="max-width:100%;display:block;margin:auto"/></body></html>`);}
+  else{const link=document.createElement('a');link.href=url;link.download=f.name;document.body.appendChild(link);link.click();link.remove();}
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
-function removeFile(reqId,role,lv,fid){
+async function removeFile(reqId,role,lv,fid){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
   const idx=(a.files||[]).findIndex(x=>x.id===fid);if(idx===-1)return;
   const name=a.files[idx].name;
+  try{await idbDel(fid);}catch(e){}
   a.files.splice(idx,1);
   r.notes.push({f:'System',x:`File removed: ${name} from ${a.r} (L${lv})`,at:now()});
-  save();renderAll();openEH(reqId,role,lv);showT('File removed');
+  save();renderAll();openUpload(reqId,role,lv);showT('File removed');
 }
 function closeEh(){document.getElementById('ehmo').classList.remove('open');}
 function closeEhBg(e){if(e.target===document.getElementById('ehmo'))closeEh();}
@@ -12235,10 +12320,9 @@ function buildReqHtml(r,lvN){
   const stClass=r.status==='Approved'?'st-approved':r.status==='Rejected'?'st-rejected':r.status==='N.A'?'st-na':'st-pending';
   let eHtml='';
   r.apvs.forEach(a=>{
-    if((a.emailHistory||[]).length||(a.files||[]).length){
-      eHtml+=`<div style="margin-top:6px;padding:6px 8px;background:#f5f4f0;border-radius:4px;border-left:3px solid #1a3a6b"><strong style="font-size:9px;color:#1a3a6b">EMAIL HISTORY — ${a.r} (L${a.lv})</strong>`;
-      (a.emailHistory||[]).forEach(e=>{eHtml+=`<div style="margin-top:4px;font-size:9px;color:#6b6960"><strong>${e.type==='reply'?'↩ Reply':'✉ Sent'}</strong> · ${e.at}<br><pre style="white-space:pre-wrap;font-family:Arial;font-size:9px;margin:2px 0;max-height:80px;overflow:hidden">${(e.body||'').replace(/</g,'&lt;').substring(0,400)}${(e.body||'').length>400?'…':''}</pre></div>`;});
-      if((a.files||[]).length)eHtml+=`<div style="font-size:9px;color:#6b6960;margin-top:3px">📎 Files: ${a.files.map(f=>f.name).join(', ')}</div>`;
+    if((a.files||[]).length){
+      eHtml+=`<div style="margin-top:6px;padding:6px 8px;background:#f5f4f0;border-radius:4px;border-left:3px solid #1a3a6b"><strong style="font-size:9px;color:#1a3a6b">UPLOADED FILES — ${a.r} (L${a.lv})</strong>`;
+      eHtml+=`<div style="font-size:9px;color:#6b6960;margin-top:3px">📎 ${a.files.map(f=>f.name).join(', ')}</div>`;
       eHtml+='</div>';
     }
   });
@@ -12629,6 +12713,8 @@ function getCONS(){
   const base=CONS.filter(c=>!removedKeys.has(`${c.n}|${c.r}|${c.e}`));
   return [...base,...CONS_CUSTOM.filter(x=>!x._removed)];
 }
+// Open the file store and migrate any legacy in-localStorage files into IndexedDB (runs once, safe to repeat).
+try{idbOpen().then(()=>migrateFilesToIDB()).catch(()=>{});}catch(e){}
 </script>
 </body>
 </html>
