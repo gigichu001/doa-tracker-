@@ -71,12 +71,14 @@ select option{white-space:normal;word-break:break-word}
 .mm{font-size:11px;color:var(--tx3);margin-bottom:14px}
 .ml{margin-bottom:12px}
 .mlh{font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.ma{display:flex;align-items:center;gap:7px;padding:8px 11px;background:var(--sur2);border-radius:var(--rs);margin-bottom:3px;flex-wrap:wrap}
+/* APPROVAL card style — used for both approval AND inform rows now */
+.ma{display:flex;align-items:center;gap:7px;padding:10px 13px;background:var(--sur2);border-radius:var(--rs);margin-bottom:3px;flex-wrap:wrap;border:.5px solid var(--bdr)}
+/* Inform/consult card gets amber tint to stay visually distinct */
+.ma-inf{background:#fffbf0;border-color:#e8dfc0;}
 .mal{flex:1;min-width:0}
-.man{font-size:11px;font-weight:500}
-.mae{font-size:10px;color:var(--tx3)}
+.man{font-size:13px;font-weight:600;margin-bottom:2px}
+.mae{font-size:12px;color:var(--tx3);margin-top:1px}
 .maa{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
-.minf{padding:7px 10px;background:#fffbf0;border:.5px solid #e8dfc0;border-radius:var(--rs);margin-bottom:3px;font-size:11px}
 .thr{border-top:.5px solid var(--bdr);padding-top:12px;margin-top:12px}
 .tht{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .tm{display:flex;gap:8px;margin-bottom:10px}
@@ -131,6 +133,13 @@ select option{white-space:normal;word-break:break-word}
 .eh-file{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--sur);border:.5px solid var(--bdr2);border-radius:20px;font-size:10px;color:var(--bl);cursor:pointer;margin:2px}
 .eh-file:hover{background:var(--blb)}
 .carry-banner{background:var(--amb);border:.5px solid #e0c888;border-radius:var(--rs);padding:8px 10px;font-size:10px;color:var(--am);margin-bottom:8px}
+/* PAGINATION controls */
+.pg-bar{display:flex;align-items:center;gap:6px;margin:12px 0;flex-wrap:wrap}
+.pg-btn{padding:4px 10px;border-radius:var(--rs);font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:.5px solid var(--bdr2);background:var(--sur);color:var(--tx);transition:all .12s}
+.pg-btn:hover:not(:disabled){background:var(--sur2)}
+.pg-btn:disabled{opacity:.35;cursor:not-allowed}
+.pg-btn.active{background:var(--ac);color:#fff;border-color:var(--ac)}
+.pg-info{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;margin-left:4px}
 </style>
 </head>
 <body>
@@ -248,7 +257,11 @@ select option{white-space:normal;word-break:break-word}
       </div>
       <!-- Matrix admin panel -->
       <div id="mtx-admin-panel" style="display:none;background:var(--sur);border:.5px solid var(--bdr2);border-radius:var(--r);padding:16px 18px;margin-bottom:16px"></div>
-      <div id="mtx-timer" style="font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:6px;min-height:16px"></div><div style="overflow-x:auto"><table class="mtbl"><thead><tr><th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th>Level</th><th>Role</th><th>Type</th></tr></thead><tbody id="mtbl-body"></tbody></table></div>
+      <!-- PAGINATION BAR (top) -->
+      <div id="pg-bar-top" class="pg-bar"></div>
+      <div style="overflow-x:auto"><table class="mtbl"><thead><tr><th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th colspan="3" style="text-align:right;padding-right:12px">Summary</th></tr></thead><tbody id="mtbl-body"></tbody></table></div>
+      <!-- PAGINATION BAR (bottom) -->
+      <div id="pg-bar-bot" class="pg-bar" style="margin-top:10px"></div>
     </div>
 
     <!-- CONTACTS -->
@@ -292,20 +305,23 @@ function getMref(r){if(r.mref)return r.mref;const ini=(r.sb||'?').trim().split(/
 let me=JSON.parse(localStorage.getItem('doa_me')||'null');
 let reqs=JSON.parse(localStorage.getItem('doa_reqs')||'[]');
 let mf={s:'',a:'',t:''};let rf={s:'',st:''};let _mtxOpen={};let _mtxData={};
+// ── PAGINATION STATE ──
+const MTX_PAGE_SIZE=50;
+let _mtxPage=0; // current page index (0-based)
+let _mtxAllRows=[]; // all built row HTML strings in grouped mode
+
 function ini(n){return(n||'?').split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase()}
 function now(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function save(){try{localStorage.setItem('doa_reqs',JSON.stringify(reqs))}catch(e){alert('Could not save: browser storage is full. Export your requests to PDF, then use "Clear all my data" to free space.');}}
-// ── INDEXEDDB FILE STORE (large files; replaces 5MB localStorage limit) ──
+// ── INDEXEDDB FILE STORE ──
 let _idb=null;
 function idbOpen(){return new Promise((res,rej)=>{if(_idb)return res(_idb);const rq=indexedDB.open('doa_files',1);rq.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('files'))db.createObjectStore('files');};rq.onsuccess=e=>{_idb=e.target.result;res(_idb);};rq.onerror=e=>rej(e);});}
 async function idbPut(id,blob){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(blob,id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);});}
 async function idbGet(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readonly');const rq=tx.objectStore('files').get(id);rq.onsuccess=()=>res(rq.result||null);rq.onerror=e=>rej(e);});}
 async function idbDel(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);});}
-// Resolve a file record to a Blob, supporting both new (IndexedDB) and legacy (base64 in record) storage.
 async function getFileBlob(f){let b=null;try{b=await idbGet(f.id);}catch(e){}if(!b&&f.data){try{b=await(await fetch(f.data)).blob();}catch(e){}}return b;}
-// One-time migration: move any legacy base64 file data out of localStorage into IndexedDB.
 async function migrateFilesToIDB(){let changed=false;for(const r of reqs){for(const a of(r.apvs||[])){for(const f of(a.files||[])){if(f.data){try{const blob=await(await fetch(f.data)).blob();await idbPut(f.id,blob);f.size=blob.size;delete f.data;changed=true;}catch(e){}}}}}if(changed)save();}
-// ── SELF-CONTAINED ZIP BUILDER (store method, no compression, no external library) ──
+// ── ZIP BUILDER ──
 const _crcTable=(()=>{let c,t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
 function _crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=_crcTable[(c^u8[i])&0xFF]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
 function makeZip(entries){const enc=new TextEncoder();const parts=[];const central=[];let offset=0;const dosT=0,dosD=0x21;
@@ -334,10 +350,7 @@ function buildSummaryText(r){const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Prod
   s+=`\r\nGenerated ${now()} from DOA Tracker.\r\n`;
   return s;}
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=name;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
-// Big centered on-screen reminder (used after Send / Remind / Notify).
 function showCenter(msg){let el=document.getElementById('centerMsg');if(!el){el=document.createElement('div');el.id='centerMsg';el.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:600;pointer-events:none';document.body.appendChild(el);}el.innerHTML=`<div style="background:var(--ac);color:#fff;padding:18px 26px;border-radius:12px;font-size:15px;font-weight:500;box-shadow:0 10px 40px rgba(0,0,0,.35);max-width:78%;text-align:center;line-height:1.4">${msg}</div>`;el.style.display='flex';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},4000);}
-// Gather every uploaded file in the request (all levels) + a summary, zip them, and download.
-// Always downloads something: the ZIP when files exist, otherwise a summary .txt. Returns true if any files were included.
 async function buildAndDownloadPack(r){
   const list=[];(r.apvs||[]).forEach(x=>(x.files||[]).forEach(f=>list.push({lv:x.lv,role:x.r,f})));
   const fileEntries=[];
@@ -384,7 +397,7 @@ function go(id,el){
   if(id==='matrix')renderMatrix();
 }
 
-// ── DROPDOWN CASCADE (scope → area → cat → sub) ──
+// ── DROPDOWN CASCADE ──
 function onScope(){
   const scope=document.getElementById('sscope').value;
   const s=document.getElementById('sarea');
@@ -430,7 +443,7 @@ function onSub(){
   const lvN={1:'Level 1 — Board',2:'Level 2 — Executive',3:'Level 3 — Product (MAS/Liner/Logistics)',4:'Level 4 — Functions',5:'Level 5 — Country'};
   let html='';
   Object.keys(byLv).sort((a,b)=>b-a).forEach(lv=>{
-    const rows=byLv[lv],hasA=rows.some(r=>isApv(r.t));
+    const rows=byLv[lv];
     html+=`<div class="lg"><div class="ll"><span class="badge bgr" style="font-size:9px">L${lv}</span>${lvN[lv]||'Level '+lv}</div>`;
     rows.forEach(r=>{
       const co=getCon(r.r,me?.co||'');
@@ -454,7 +467,6 @@ function submitReq(){
   const apvs=rules.map(r=>{const c=getCon(r.r,co);return{lv:r.lv,r:r.r,t:r.t,n:c.n,re:c.e,st:'Pending',sent:false,at:null,cm:''}});
   const _ts=Date.now();
   const _initials=(n||'?').trim().split(/\s+/).map(x=>x[0]).join('').substring(0,3).toUpperCase()||'X';
-  // simple running sequence per browser: DOA-<INITIALS>-001, 002, ...
   let _seq=parseInt(localStorage.getItem('doa_seq')||'0')+1;
   localStorage.setItem('doa_seq',String(_seq));
   const _mref='DOA-'+_initials+'-'+String(_seq).padStart(3,'0');
@@ -497,14 +509,12 @@ function rrow(r){
   const activeApvs=apvs.filter(a=>a.st!=='N.A');
   const dn=activeApvs.filter(a=>a.st==='Approved').length;
   const total=activeApvs.length;
-  // N.A is "skip" not "stopped" — only hard Rejected stops
   const isRej=r.status==='Rejected'||apvs.some(a=>a.st==='Rejected');
   const pct=total?Math.round(dn/total*100):0;
   const alv=getActiveLv(r);
   const bc=r.status==='Approved'?'bg':r.status==='Rejected'?'br':'bw';
   const barColor=r.status==='Rejected'?'#c0392b':r.status==='Approved'?'var(--gr)':'var(--gr)';
   const rejNote=isRej?`<div style="font-size:10px;color:var(--rd);margin-top:3px;font-weight:500">Rejected — process stopped</div>`:'';
-  // export mode: show checkbox, click selects rather than opens modal
   if(exportMode){
     const checked=exportSelected.has(r.id);
     return `<div class="rrow" onclick="toggleExportSelect('${r.id}')" style="cursor:pointer;${checked?'border-color:var(--ac);background:var(--acl)':''}">
@@ -522,6 +532,8 @@ function rrow(r){
   </div>`;
 }
 function renderReqs(){renderDash();}
+
+// ── OPEN MODAL ──
 function openModal(id){
   const r=reqs.find(x=>x.id===id);if(!r)return;
   const alv=getActiveLv(r);
@@ -533,12 +545,10 @@ function openModal(id){
     const dn=at.every(a=>a.st==='Approved'),rj=at.some(a=>a.st==='Rejected'),na=at.some(a=>a.st==='N.A')&&!at.some(a=>a.st==='Rejected');
     return `${i>0?'<span class="sa">→</span>':''}<span class="ss ${rj?'rej':na?'rej':dn?'don':lv===alv?'act':''}">L${lv} ${rj?'✗':na?'N.A':dn?'✓':lv===alv?'▶':'⏳'}</span>`;
   }).join('');
-  const isSubmitter2=r.sb===me?.n||r.se===me?.e;
   let lvH='';
   Object.keys(byLv).sort((a,b)=>b-a).forEach(lv=>{
     const rows=byLv[lv],lvN2=parseInt(lv);
     const apR=rows.filter(a=>isApv(a.t)),inR=rows.filter(a=>isInf(a.t));
-    const isSubmitter=r.sb===me?.n||r.se===me?.e;
     const isLk=apvLvs.includes(lvN2)&&alv!==null&&lvN2<alv;
     const isAct=apR.length>0&&(r.status==='In Progress'||r.status==='Rejected'||r.status==='N.A')&&!isLk;
     const lvDn=apR.length&&apR.every(a=>a.st==='Approved'||a.st==='Rejected'||a.st==='N.A');
@@ -548,77 +558,60 @@ function openModal(id){
       apR.forEach(a=>{
         const sc=a.st==='Approved'?'bg':a.st==='Rejected'?'br':a.st==='N.A'?'bp':a.st==='Blocked'?'bgr':a.st==='Email Sent'?'bt':'bgr';
         const fileCount=(a.files||[]).length;
-        // A row is "locked" only when it is still unresolved AND a higher level above it is not complete.
-        // Already-decided rows (Approved/Rejected/N.A) are never locked — they stay editable, even out of order.
         const rowUnresolved=(a.st==='Pending'||a.st==='Email Sent'||a.st==='Blocked');
         const locked=rowUnresolved&&(isLk||a.st==='Blocked');
-        const isDecided=(a.st==='Approved'||a.st==='Rejected'||a.st==='N.A');
-        // Upload (file management): always available, in any row state
+        const isScopeApv=/scope/i.test(a.t);
         const attachBtn=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${a.r}','${a.lv}')">Upload${fileCount?` (${fileCount})`:''}</button>`;
         const sendBtn=(!locked&&a.st==='Pending'&&r.status!=='Rejected')?`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Send</button>`:'';
         const remindBtn=(!locked&&a.st==='Email Sent'&&r.status!=='Rejected')?`<button class="btn" style="padding:5px 11px;font-size:12px;border-color:#7a4f00;color:var(--am)" onclick="sendReminder('${id}','${a.r}','${a.lv}')">Remind</button>`:'';
-        // Approve / Reject: only once the email has been sent (or already decided). Never before contacting the approver.
         const canRespond=!locked&&(a.st==='Email Sent'||a.sent||a.st==='Approved'||a.st==='Rejected');
         const approveBtn=canRespond?`<button class="btn btn-ok btn-sm ${a.st==='Approved'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Approved')" style="padding:5px 12px;font-size:12px">${a.st==='Approved'?'Approved':'Approve'}</button>`:'';
         const rejectBtn=canRespond?`<button class="btn btn-no btn-sm ${a.st==='Rejected'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Rejected')" style="padding:5px 12px;font-size:12px">${a.st==='Rejected'?'Rejected':'Reject'}</button>`:'';
-        // N.A ("skip, not needed") is only allowed for "Scope ..." actions — submitter decides if they apply.
-        // Plain (mandatory) approvals cannot be skipped.
-        const isScopeApv=/scope/i.test(a.t);
         const naBtn=(isScopeApv||a.st==='N.A')?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
         const lockedHint=locked?`<span style="font-size:11px;color:var(--tx3);margin-left:6px">Locked${isScopeApv?' — or mark N.A to skip':''}</span>`:'';
-        const typeBadge=`<span class="badge ${tc(a.t)}" style="font-size:9px;margin-top:2px;display:inline-block">${a.t} · ${isScopeApv?'optional':'required'}</span>`;
+        const typeBadge=`<span class="badge ${tc(a.t)}" style="font-size:10px;margin-top:2px;display:inline-block">${a.t} · ${isScopeApv?'optional':'required'}</span>`;
         lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}</div>${typeBadge}<div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${locked?'Pending':a.st}</span>${sendBtn} ${remindBtn}${attachBtn}${approveBtn} ${rejectBtn} ${naBtn}${lockedHint}</div></div>`;
       });
       lvH+='</div>';
     }
-    // Group inform/consult rows by type within this level. Groups of >1 collapse to one "[type] all" row.
+    // INFORM/CONSULT rows — now unified card style matching approval rows
     const infGroups={};
     inR.forEach(a=>{(infGroups[a.t]=infGroups[a.t]||[]).push(a);});
     Object.keys(infGroups).forEach(type=>{
       const grp=infGroups[type];const isScopeInf=/scope/i.test(type);
-      if(grp.length===1){
-        const a=grp[0];
-        const canNotify2=r.status!=='Rejected'&&a.st==='Pending';
-        let infAction='';
-        if(a.st==='N.A'){infAction='';}
-        else if(canNotify2){infAction=`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Notify</button>`;}
-        else if(a.st==='Pending'){infAction=`<span style="color:var(--tx3);font-size:12px">Locked — complete previous level first</span>`;}
-        else{infAction='<span style="color:var(--gr);font-size:12px">Notified</span>';}
-        const infNa=isScopeInf?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
-        const infUpload=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${a.r}','${a.lv}')">Upload${(a.files||[]).length?` (${(a.files||[]).length})`:''}</button>`;
-        lvH+=`<div class="minf" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><div style="flex:1;min-width:0"><span class="badge bgr" style="font-size:11px;margin-right:5px">L${lv}</span><span class="badge bw" style="font-size:11px;margin-right:5px">${a.t} · ${isScopeInf?'optional':'required'}</span><span style="font-size:11px;color:var(--tx3)">— notify only${isScopeInf?', or N.A to skip':''}</span> <strong>${a.r}</strong>${a.n&&a.n!==a.r?` (${a.n})`:''} <span style="color:var(--tx3);font-size:12px">· ${a.re}</span></div><div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${infAction}${infUpload}${infNa}</div></div>`;
-      } else {
-        // Merged group — one action for everyone of this type at this level
-        const allNa=grp.every(a=>a.st==='N.A');
-        const anyPending=grp.some(a=>a.st==='Pending');
-        const canNotifyAll=r.status!=='Rejected'&&anyPending;
-        const tEsc=type.replace(/'/g,"\\'");
-        const label=`${type.replace(/^Scope /i,'')} all`;
-        let actionAll='';
-        if(allNa){actionAll='';}
-        else if(canNotifyAll){actionAll=`<button class="btn btn-em" onclick="notifyAll('${id}','${lv}','${tEsc}')">${label}</button>`;}
-        else{actionAll='<span style="color:var(--gr);font-size:12px">All notified</span>';}
-        const naAllBtn=isScopeInf?`<button class="btn btn-sm ${allNa?'selected':''}" onclick="naAll('${id}','${lv}','${tEsc}')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${allNa?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${allNa?'N.A all ✓':'N.A all'}</button>`:'';
-        const grpRoleEsc=grp[0].r.replace(/'/g,"\\'");
-        const grpUpload=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${grpRoleEsc}','${lv}')">Upload${(grp[0].files||[]).length?` (${(grp[0].files||[]).length})`:''}</button>`;
-        const names=grp.map(a=>`${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''}`).join(' · ');
-        lvH+=`<div class="minf" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap"><div style="flex:1;min-width:0"><span class="badge bgr" style="font-size:11px;margin-right:5px">L${lv}</span><span class="badge bw" style="font-size:11px;margin-right:5px">${type} · ${isScopeInf?'optional':'required'}</span><span style="font-size:11px;color:var(--tx3)">— ${grp.length} recipients, notify only${isScopeInf?', or N.A to skip':''}</span><div style="font-size:11px;color:var(--tx2);margin-top:4px;line-height:1.5">${names}</div></div><div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${actionAll}${grpUpload}${naAllBtn}</div></div>`;
+      // Section header for inform level (only if no approval rows shown for this level already)
+      if(!apR.length){
+        lvH+=`<div class="ml"><div class="mlh"><span class="badge bgr" style="font-size:11px">L${lv}</span>${lvN[lv]||'L'+lv}</div>`;
       }
+      grp.forEach(a=>{
+        const canNotify=r.status!=='Rejected'&&a.st==='Pending';
+        const fileCount=(a.files||[]).length;
+        const attachBtn=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${a.r}','${a.lv}')">Upload${fileCount?` (${fileCount})`:''}</button>`;
+        let notifyBtn='';
+        if(a.st==='N.A'){notifyBtn='';}
+        else if(canNotify){notifyBtn=`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Notify</button>`;}
+        else if(a.st==='Pending'){notifyBtn=`<span style="color:var(--tx3);font-size:12px">Locked</span>`;}
+        else{notifyBtn='<span style="color:var(--gr);font-size:12px;font-weight:500">✓ Notified</span>';}
+        const naBtn=isScopeInf?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
+        const typeBadge=`<span class="badge bw" style="font-size:10px;margin-top:2px;display:inline-block">${type} · ${isScopeInf?'optional':'required'}</span>`;
+        const stBadge=a.st==='N.A'?`<span class="badge bp">N.A</span>`:a.st==='Email Sent'?`<span class="badge bt">Notified</span>`:`<span class="badge bgr">Pending</span>`;
+        lvH+=`<div class="ma ma-inf"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}</div>${typeBadge}<div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid #e8dfc0">${a.cm}</div>`:''}</div><div class="maa">${stBadge}${notifyBtn}${attachBtn}${naBtn}</div></div>`;
+      });
+      if(!apR.length){lvH+='</div>';}
     });
   });
   const thrH=r.notes.map(nt=>`<div class="tm"><div class="tav">${ini(nt.f)}</div><div class="tb ${nt.f===me?.n?'mine':''}"><div class="tw">${nt.f}</div><div class="tt">${nt.x}</div><div class="ti">${nt.at}</div></div></div>`).join('')||'<div style="font-size:11px;color:var(--tx3)">No notes yet.</div>';
   document.getElementById('mb').innerHTML=`<h3>${r.sub}</h3><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--ac);font-weight:600;margin:2px 0 4px">Ref: ${getMref(r)}</div><div class="mm">${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · <strong>${r.status}</strong> · ${r.dt} by ${r.sb}</div><div style="display:flex;gap:6px;margin:10px 0 4px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" style="padding:6px 13px;font-size:12px;border-color:var(--tl);color:var(--tl)" onclick="exportSingleReqPDF('${id}')">Export PDF</button>${(r.sb===me?.n||r.se===me?.e)?`<button class="btn btn-no" style="padding:6px 13px;font-size:12px" onclick="deleteReq('${id}')">Delete request</button>`:''}</div>${r.purpose?`<div style="background:var(--sur2);border-radius:var(--rs);padding:8px 11px;font-size:12px;color:var(--tx2);margin-bottom:12px"><strong>Purpose:</strong> ${r.purpose}</div>`:''}<div style="margin-bottom:12px"><div style="font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Approval sequence — level by level</div><div class="seq">${seqH||'<span class="badge bg">No sequential approvals</span>'}</div></div>${lvH}<div class="thr"><div class="tht">Notes & activity</div>${thrH}<div class="rb"><textarea id="ntxt-${id}" placeholder="Add a note, record a response, log an update..."></textarea><div class="ras"><button class="btn btn-p" style="padding:7px 14px;font-size:13px" onclick="addNote('${id}')">Add note</button><button class="btn" style="padding:7px 13px;font-size:13px" onclick="closeMo()">Close</button></div></div></div>`;
   document.getElementById('mo').classList.add('open');
 }
+
 async function sendOne(reqId,role,lv){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
   const alv=getActiveLv(r);
   if(r.status==='Rejected'){showT('Cannot send — request has been rejected');return}
-  // block sending a locked row (a higher level is not complete yet)
   if(isApv(a.t)&&alv!==null&&a.lv<alv){showT('Locked — Level '+alv+' must be completed first');return}
   const to=a.re;
   const refCode=`[REF: ${getMref(r)}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
-  // Collect all files from higher levels for auto-carry reminder
   const higherLvFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length).flatMap(x=>(x.files||[]).map(f=>`  • ${f.name} (from L${x.lv} — ${x.r})`));
   const attachNote=higherLvFiles.length?`\n\nATTACHMENTS FROM PRIOR LEVELS (please attach to this email):\n${higherLvFiles.join('\n')}`:'';
   const mref=getMref(r);
@@ -636,8 +629,6 @@ async function sendOne(reqId,role,lv){
   }
   const bodyText=`Dear ${a.n||a.r},\n\n${getOpeningPara(a.t)}\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.${attachNote}\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${getClosingPara(a.t)}\n\nThank you,\n${r.sb}`;
   const body=encodeURIComponent(bodyText);
-  // Two jobs from one click: (1) build a ZIP of all uploaded files for this request and download it,
-  // (2) open Outlook pre-filled. ZIP first so the download fires before the mail handoff.
   let hadFiles=false;
   try{hadFiles=await buildAndDownloadPack(r);}catch(e){showT('Could not build attachment pack');}
   window.location.href=`mailto:${to}?subject=${subj}&body=${body}`;
@@ -647,24 +638,19 @@ async function sendOne(reqId,role,lv){
   showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the Outlook email before sending.':'Summary downloaded.<br>Drag it into the Outlook email before sending.');
 }
 function recomputeStatus(r){
-  // Single source of truth for request status, derived from approval rows only.
   const apv=r.apvs.filter(x=>isApv(x.t));
   if(!apv.length){r.status='Approved';return;}
-  // hard reject anywhere => Rejected, and block any still-open approval rows
   if(apv.some(x=>x.st==='Rejected')){
     r.status='Rejected';
     r.apvs.forEach(x=>{if(isApv(x.t)&&(x.st==='Pending'||x.st==='Email Sent'))x.st='Blocked';});
     return;
   }
-  // no rejection => unblock anything previously blocked
   r.apvs.forEach(x=>{if(x.st==='Blocked'&&isApv(x.t))x.st=x.sent?'Email Sent':'Pending';});
-  // every approval row resolved (Approved or N.A) => fully Approved, else still In Progress
   const allResolved=apv.every(x=>x.st==='Approved'||x.st==='N.A');
   r.status=allResolved?'Approved':'In Progress';
 }
 function decide(reqId,role,lv,dec){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  // if clicking same button again = undo/cancel that decision
   if(a.st===dec){
     const cancelReason=dec==='Rejected'||dec==='N.A'?prompt(`Reason for cancelling (optional):`)||'':null;
     a.st=a.sent?'Email Sent':'Pending';a.cm='';a.at=null;
@@ -672,13 +658,11 @@ function decide(reqId,role,lv,dec){
     r.notes.push({f:me?.n||'User',x:`Cancelled ${dec} for ${role}${cancelReason?': '+cancelReason:''}`,at:now()});
     save();renderAll();openModal(reqId);showT('Decision cancelled — '+role+' restored');return;
   }
-  // Normal new decision
   const cm=(dec==='Rejected'||dec==='N.A')?prompt(`Reason for ${dec} (required):`)||'N/A':null;
   const prevStatus=r.status;
   a.st=dec;a.cm=cm||'';a.at=now();
   r.notes.push({f:role,x:`${dec}${cm?': '+cm:''}`,at:now()});
   recomputeStatus(r);
-  // helpful system notes on level transitions
   const alvN=parseInt(lv),atLv=r.apvs.filter(x=>x.lv===alvN&&isApv(x.t));
   if(r.status==='Rejected'){
     r.notes.push({f:'System',x:`Rejected at Level ${alvN} by ${role}. Other approvals blocked.`,at:now()});
@@ -698,39 +682,88 @@ function deleteReq(reqId){
   reqs=reqs.filter(x=>x.id!==reqId);
   save();renderAll();closeMo();showT('Request deleted');
 }
+
+// ── RENDER MATRIX with PAGINATION ──
 function renderMatrix(){
   if(!document.getElementById('page-matrix').classList.contains('active'))return;
   const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Function',5:'L5 Country'};
   const head=document.getElementById('mtbl-body').closest('table').querySelector('thead tr');
   const body=document.getElementById('mtbl-body');
+
   if(mf.s||mf.a||mf.t){
-    // ── Flat mode: filter active ──
+    // ── FLAT FILTERED MODE (no pagination needed — filtered sets are small) ──
     head.innerHTML='<th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th>Level</th><th>Role</th><th>Type</th>';
     let rows=getDOA();
     if(mf.s)rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(mf.s.toLowerCase()));
     if(mf.a)rows=rows.filter(r=>r.a===mf.a);
     if(mf.t)rows=rows.filter(r=>r.t===mf.t);
-    const _t1=performance.now();
     body.innerHTML=rows.map(r=>`<tr><td><span class="badge bgr" style="font-size:9px">${r.sc||''}</span></td><td><span class="badge bgr" style="font-size:9px">${r.a}</span></td><td style="font-size:11px">${r.c}</td><td style="font-size:11px;max-width:180px">${r.s}</td><td style="font-size:10px;font-weight:500;color:var(--tx2)">${lvN[r.lv]||r.lv}</td><td style="font-size:11px;font-weight:500">${r.r}</td><td><span class="badge ${tc(r.t)}" style="font-size:9px">${r.t}</span></td></tr>`).join('')||'<tr><td colspan="7" class="es">No results.</td></tr>';
-    const _ms2=(performance.now()-_t1).toFixed(1);const _ti2=document.getElementById('mtx-timer');if(_ti2)_ti2.textContent='Showing '+rows.length+' filtered rows in '+_ms2+' ms';
+    document.getElementById('pg-bar-top').innerHTML='';
+    document.getElementById('pg-bar-bot').innerHTML='';
     return;
   }
-  // ── Grouped mode: 1 row per sub-category, detail rows built lazily on first expand ──
+
+  // ── GROUPED MODE with PAGINATION (50 groups per page) ──
   head.innerHTML='<th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th colspan="3" style="text-align:right;padding-right:12px">Summary</th>';
   _mtxData={};
-  const parts=[];let gi=0;
+  _mtxOpen={};
+  const allParts=[];let gi=0;
   for(const sc in IDX)for(const a in IDX[sc])for(const c in IDX[sc][a])for(const s in IDX[sc][a][c]){
     const rules=IDX[sc][a][c][s];const i=gi++;
     _mtxData[i]=rules;
     const types=[...new Set(rules.map(r=>r.t))];
     const typeSummary=types.slice(0,2).map(t=>`<span class="badge ${tc(t)}" style="font-size:8px;margin-right:3px">${t}</span>`).join('')+(types.length>2?`<span style="font-size:9px;color:var(--tx3)"> +${types.length-2}</span>`:'');
-    parts.push(`<tr class="rrow" onclick="toggleMtxGroup(${i},this)" style="cursor:pointer"><td><span class="badge bgr" style="font-size:9px">${sc}</span></td><td><span class="badge bgr" style="font-size:9px">${a}</span></td><td style="font-size:11px">${c}</td><td style="font-size:11px;font-weight:500">${s}</td><td colspan="3" style="text-align:right;white-space:nowrap;padding-right:10px"><span style="font-size:10px;color:var(--tx3);margin-right:8px">${rules.length} rule${rules.length!==1?'s':''}</span>${typeSummary}<span class="mtx-chv" style="font-size:15px;color:var(--tx3);margin-left:8px;display:inline-block;transition:transform .15s">&#8250;</span></td></tr>`);
+    allParts.push(`<tr class="rrow" onclick="toggleMtxGroup(${i},this)" style="cursor:pointer"><td><span class="badge bgr" style="font-size:9px">${sc}</span></td><td><span class="badge bgr" style="font-size:9px">${a}</span></td><td style="font-size:11px">${c}</td><td style="font-size:11px;font-weight:500">${s}</td><td colspan="3" style="text-align:right;white-space:nowrap;padding-right:10px"><span style="font-size:10px;color:var(--tx3);margin-right:8px">${rules.length} rule${rules.length!==1?'s':''}</span>${typeSummary}<span class="mtx-chv" style="font-size:15px;color:var(--tx3);margin-left:8px;display:inline-block;transition:transform .15s">&#8250;</span></td></tr>`);
   }
-  const _t1=performance.now();
-  body.innerHTML=parts.join('')||'<tr><td colspan="7" class="es">No results.</td></tr>';
-  const _ms=(performance.now()-_t1).toFixed(1);
-  const _ti=document.getElementById('mtx-timer');if(_ti)_ti.textContent='Rendered '+gi+' rows in '+_ms+' ms';
+  _mtxAllRows=allParts;
+  const totalPages=Math.ceil(_mtxAllRows.length/MTX_PAGE_SIZE);
+  if(_mtxPage>=totalPages)_mtxPage=0;
+  _renderMtxPage(totalPages);
 }
+
+function _renderMtxPage(totalPages){
+  const total=_mtxAllRows.length;
+  if(!totalPages)totalPages=Math.ceil(total/MTX_PAGE_SIZE);
+  const start=_mtxPage*MTX_PAGE_SIZE;
+  const end=Math.min(start+MTX_PAGE_SIZE,total);
+  const pageRows=_mtxAllRows.slice(start,end);
+  document.getElementById('mtbl-body').innerHTML=pageRows.join('')||'<tr><td colspan="7" class="es">No results.</td></tr>';
+  const pgHtml=_buildPgBar(totalPages);
+  document.getElementById('pg-bar-top').innerHTML=pgHtml;
+  document.getElementById('pg-bar-bot').innerHTML=pgHtml;
+}
+
+function _buildPgBar(totalPages){
+  if(totalPages<=1)return'';
+  const cur=_mtxPage;
+  const total=_mtxAllRows.length;
+  const start=cur*MTX_PAGE_SIZE+1;
+  const end=Math.min((cur+1)*MTX_PAGE_SIZE,total);
+  let html=`<button class="pg-btn" onclick="mtxGoPage(0)" ${cur===0?'disabled':''}>«</button>`;
+  html+=`<button class="pg-btn" onclick="mtxGoPage(${cur-1})" ${cur===0?'disabled':''}>‹</button>`;
+  // show window of pages around current
+  const win=2;
+  for(let p=0;p<totalPages;p++){
+    if(p===0||p===totalPages-1||Math.abs(p-cur)<=win){
+      html+=`<button class="pg-btn ${p===cur?'active':''}" onclick="mtxGoPage(${p})">${p+1}</button>`;
+    } else if(Math.abs(p-cur)===win+1){
+      html+=`<span class="pg-info">…</span>`;
+    }
+  }
+  html+=`<button class="pg-btn" onclick="mtxGoPage(${cur+1})" ${cur===totalPages-1?'disabled':''}>›</button>`;
+  html+=`<button class="pg-btn" onclick="mtxGoPage(${totalPages-1})" ${cur===totalPages-1?'disabled':''}>»</button>`;
+  html+=`<span class="pg-info">${start}–${end} of ${total}</span>`;
+  return html;
+}
+
+function mtxGoPage(p){
+  _mtxPage=p;
+  _mtxOpen={};// collapse all expanded rows when changing page
+  const totalPages=Math.ceil(_mtxAllRows.length/MTX_PAGE_SIZE);
+  _renderMtxPage(totalPages);
+  document.getElementById('page-matrix').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function toggleMtxGroup(i,rowEl){
   const existing=document.querySelectorAll(`tr[data-gi="${i}"]`);
   if(existing.length){
@@ -741,7 +774,6 @@ function toggleMtxGroup(i,rowEl){
     if(chv)chv.style.transform=show?'rotate(90deg)':'rotate(0deg)';
     return;
   }
-  // First expand — build and inject detail rows lazily
   _mtxOpen[i]=true;
   const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Function',5:'L5 Country'};
   const detailHTML=(_mtxData[i]||[]).map(r=>`<tr data-gi="${i}" class="mtx-detail" style="background:var(--sur2)"><td colspan="4" style="padding-left:20px;border-left:2px solid var(--bdr2)"></td><td style="font-size:10px;font-weight:500;color:var(--tx2)">${lvN[r.lv]||r.lv}</td><td style="font-size:11px">${r.r}</td><td><span class="badge ${tc(r.t)}" style="font-size:9px">${r.t}</span></td></tr>`).join('');
@@ -750,7 +782,10 @@ function toggleMtxGroup(i,rowEl){
   if(chv)chv.style.transform='rotate(90deg)';
 }
 
-function fMtx(v){mf.s=v;renderMatrix()}function fMtxA(v){mf.a=v;renderMatrix()}function fMtxT(v){mf.t=v;renderMatrix()}
+function fMtx(v){mf.s=v;_mtxPage=0;renderMatrix()}
+function fMtxA(v){mf.a=v;_mtxPage=0;renderMatrix()}
+function fMtxT(v){mf.t=v;_mtxPage=0;renderMatrix()}
+
 function renderCons(){
   const lt={1:'tl1',2:'tl2',3:'tl3',4:'tl4',5:'tl5'};
   const ll={1:'Level 1 — Board',2:'Level 2 — Executive',3:'Level 3 — Product',4:'Level 4 — Functions',5:'Level 5 — Country'};
@@ -784,7 +819,6 @@ async function sendReminder(reqId,role,lv){
   save();renderAll();openModal(reqId);
   showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the reminder email before sending.':'Summary downloaded.<br>Drag it into the reminder email before sending.');
 }
-// Notify everyone of one inform/consult type at one level in a single email (all in TO:, "Dear all,").
 async function notifyAll(reqId,lv,type){
   const r=reqs.find(x=>x.id===reqId);if(!r)return;
   if(r.status==='Rejected'){showT('Cannot send — request has been rejected');return}
@@ -806,7 +840,6 @@ async function notifyAll(reqId,lv,type){
   save();renderAll();openModal(reqId);
   showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the Outlook email before sending.':'Summary downloaded.<br>Drag it into the Outlook email before sending.');
 }
-// Mark/unmark every recipient of one inform type at one level as N.A in one click.
 function naAll(reqId,lv,type){
   const r=reqs.find(x=>x.id===reqId);if(!r)return;
   const grp=r.apvs.filter(x=>x.lv===parseInt(lv)&&x.t===type&&isInf(x.t));if(!grp.length)return;
@@ -822,9 +855,8 @@ function naAll(reqId,lv,type){
   recomputeStatus(r);save();renderAll();openModal(reqId);
 }
 // ── ADMIN PIN ──
-const ADMIN_PIN='1234'; // change this to your preferred PIN
+const ADMIN_PIN='1234';
 function checkPin(){return prompt('Admin PIN required:')===ADMIN_PIN}
-
 function showAddApvForm(reqId){
   if(!checkPin()){showT('Incorrect PIN');return}
   const panel=document.getElementById('add-apv-panel-'+reqId);
@@ -864,12 +896,11 @@ function removeApv(reqId,role,lv){
 }
 function clearAllData(){if(!confirm("This will delete ALL your saved requests and log you out. Are you sure?"))return;localStorage.clear();location.reload();}
 
-// ── FILE UPLOAD (stored in IndexedDB; carried into the ZIP pack on Send) ──
+// ── FILE UPLOAD ──
 function fmtSize(b){if(b==null)return'';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(0)+' KB';return(b/1048576).toFixed(1)+' MB';}
 function openUpload(reqId,role,lv){
   const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
   if(!a.files)a.files=[];
-  // Files already uploaded at prior (higher) levels — these are also carried in the ZIP pack automatically.
   const higherFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length);
   const carryHtml=higherFiles.length?`<div class="carry-banner"><strong>Files from prior levels</strong> — these are bundled into the ZIP automatically when you Send:<br>${higherFiles.flatMap(x=>(x.files||[]).map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${x.r}','${x.lv}','${f.id}')">${f.name} <span style="color:var(--tx3)">(L${x.lv} — ${x.r})</span></span>`)).join('')}</div>`:'';
   const fileHtml=a.files.length?`<div style="margin-top:10px"><div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:4px">Uploaded files (${a.files.length}):</div>${a.files.map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${role}','${lv}','${f.id}')">📄 ${f.name}${f.size?` <span style="color:var(--tx3)">${fmtSize(f.size)}</span>`:''}</span> <span style="font-size:9px;color:var(--rd);cursor:pointer" onclick="removeFile('${reqId}','${role}','${lv}','${f.id}')" title="Remove">✕</span>`).join(' ')}</div>`:`<div style="font-size:11px;color:var(--tx3);padding:8px 0">No files uploaded for this approver yet.</div>`;
@@ -877,11 +908,11 @@ function openUpload(reqId,role,lv){
     <h3 style="font-size:15px;font-weight:600;margin-bottom:2px">Upload files</h3>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''} · L${lv} · ${a.t}</div>
     ${carryHtml}
-    <div style="font-size:11px;color:var(--tx2);margin:6px 0 8px">Upload supporting documents or a saved email exchange (drag the email out of Outlook to your desktop first, then choose it here). Everything uploaded across all levels is gathered into one ZIP when you click <strong>Send</strong>.</div>
+    <div style="font-size:11px;color:var(--tx2);margin:6px 0 8px">Upload supporting documents or a saved email exchange. Everything uploaded across all levels is gathered into one ZIP when you click <strong>Send</strong>.</div>
     <label class="btn" style="font-size:13px;padding:7px 14px;cursor:pointer;color:var(--tl);border-color:var(--tl)">Choose files<input type="file" style="display:none" multiple onchange="attachFiles(event,'${reqId}','${role}','${lv}')"/></label>
     <button class="btn" style="font-size:13px;padding:7px 13px;margin-left:6px" onclick="closeEh()">Close</button>
     ${fileHtml}
-    <div style="font-size:9px;color:var(--tx3);margin-top:8px">Stored locally in this browser (IndexedDB). Up to 50 MB per file. Note: Outlook usually rejects emails over ~20–25 MB total, so keep the combined attachments under that to send successfully.</div>`;
+    <div style="font-size:9px;color:var(--tx3);margin-top:8px">Stored locally in this browser (IndexedDB). Up to 50 MB per file.</div>`;
   document.getElementById('ehmo').classList.add('open');
 }
 function openAttach(reqId,role,lv){openUpload(reqId,role,lv);}
@@ -918,7 +949,7 @@ async function removeFile(reqId,role,lv,fid){
 function closeEh(){document.getElementById('ehmo').classList.remove('open');}
 function closeEhBg(e){if(e.target===document.getElementById('ehmo'))closeEh();}
 
-// ── FEATURE A: EXPORT PDF (all requests) ──
+// ── EXPORT PDF ──
 function buildReqHtml(r,lvN){
   const apvs=r.apvs.filter(a=>isApv(a.t));
   const infs=r.apvs.filter(a=>isInf(a.t));
@@ -967,7 +998,7 @@ function exportAllReqsPDF(){
   html+='</body></html>';
   openPdfWindow(html);
 }
-// ── EXPORT MODE (checkbox select) ──
+// ── EXPORT MODE ──
 let exportMode=false;
 let exportSelected=new Set();
 function toggleExportMode(){
@@ -991,7 +1022,6 @@ function toggleExportSelect(reqId){
   else exportSelected.add(reqId);
   const lbl=document.getElementById('export-count-label');
   if(lbl)lbl.textContent=exportSelected.size+' selected';
-  // update checkbox visual on the row
   const cb=document.getElementById('export-cb-'+reqId);
   if(cb)cb.checked=exportSelected.has(reqId);
 }
@@ -1012,16 +1042,23 @@ function exportSingleReqPDF(reqId){
   openPdfWindow(html);
 }
 
-// ── FEATURE B: MATRIX ADMIN (PIN = 1111) ──
+// ── MATRIX ADMIN (PIN = 1111) ──
 const MATRIX_PIN='1111';
 let DOA_CUSTOM=JSON.parse(localStorage.getItem('doa_custom')||'[]');
 let CONS_CUSTOM=JSON.parse(localStorage.getItem('cons_custom')||'[]');
-function getDOA(){return [...DOA,...DOA_CUSTOM]}
-function getCONS(){return [...CONS,...CONS_CUSTOM]}
+function getDOA(){
+  const removedKeys=new Set(DOA_CUSTOM.filter(x=>x._removed).map(x=>`${x.sc}|${x.a}|${x.c}|${x.s}|${x.r}|${x.lv}`));
+  const base=DOA.filter(r=>!removedKeys.has(`${r.sc}|${r.a}|${r.c}|${r.s}|${r.r}|${r.lv}`));
+  return [...base,...DOA_CUSTOM.filter(x=>!x._removed)];
+}
+function getCONS(){
+  const removedKeys=new Set(CONS_CUSTOM.filter(x=>x._removed).map(x=>`${x.n}|${x.r}|${x.e}`));
+  const base=CONS.filter(c=>!removedKeys.has(`${c.n}|${c.r}|${c.e}`));
+  return [...base,...CONS_CUSTOM.filter(x=>!x._removed)];
+}
 function saveCustom(){localStorage.setItem('doa_custom',JSON.stringify(DOA_CUSTOM));localStorage.setItem('cons_custom',JSON.stringify(CONS_CUSTOM));buildIndex();}
 function checkMtxPin(){return prompt('Admin PIN required:')===MATRIX_PIN}
 
-// helpers to build cascading dropdowns from ALL DOA data (base + custom)
 function buildSelectWithNew(id,options,placeholder){
   return`<select class="fs" id="${id}" style="font-size:11px;white-space:normal;word-break:break-word"><option value="">— ${placeholder} —</option>${options.map(o=>`<option value="${o}" title="${o}">${o}</option>`).join('')}<option value="__new__">✚ Add new…</option></select>`;
 }
@@ -1037,7 +1074,6 @@ function handleNewOption(selId){
 }
 function buildLogicEditForm(prefix,lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,rule){
   const val=(key)=>rule?rule[key]:'';
-  // Fix 1+2: select style allows long text to wrap; Fix 5: 13px font
   const selWithPrefill=(id,options,placeholder,current)=>{
     const opts=options.includes(current)?options:[...options,current].filter(Boolean);
     return`<select class="fs" id="${id}" style="font-size:13px;white-space:normal;word-break:break-word;height:auto">${!current?`<option value="">— ${placeholder} —</option>`:''}`+opts.map(o=>`<option value="${o}" ${o===current?'selected':''} title="${o}">${o}</option>`).join('')+`<option value="__new__">✚ Add new…</option></select>`;
@@ -1054,14 +1090,12 @@ function buildLogicEditForm(prefix,lvOpts,typeOpts,allScopes,allAreas,allCats,al
   if(rule){setTimeout(()=>{const lvEl=document.getElementById(prefix+'lv');if(lvEl)lvEl.value=String(rule.lv);const tEl=document.getElementById(prefix+'t');if(tEl)tEl.value=rule.t;},0);}
 }
 
-// Fix 4: cascading filter for Update/Remove logic (scope→area→cat→sub→role)
 let adminFilterState={action:'',sc:'',a:'',c:'',s:''};
 function buildAdminCascade(action){
   adminFilterState.action=action;
   const allDOA=getDOA();
   const scopes=[...new Set(allDOA.map(r=>r.sc))].sort();
   const panel=document.getElementById('admin-cascade-filter');
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
   panel.innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
       <div><div class="fl" style="font-size:13px">Scope</div>
@@ -1085,26 +1119,22 @@ function buildAdminCascade(action){
 }
 function adminCascadeChange(field,val){
   adminFilterState[field]=val;
-  // reset downstream
   if(field==='sc'){adminFilterState.a='';adminFilterState.c='';adminFilterState.s='';}
   if(field==='a'){adminFilterState.c='';adminFilterState.s='';}
   if(field==='c'){adminFilterState.s='';}
   const allDOA=getDOA();
-  // repopulate area
   const aEl=document.getElementById('adm-f-a');
   if(aEl){
     const areas=[...new Set(allDOA.filter(r=>!adminFilterState.sc||r.sc===adminFilterState.sc).map(r=>r.a))].sort();
     aEl.disabled=!adminFilterState.sc;
     aEl.innerHTML=`<option value="">All areas</option>`+areas.map(a=>`<option value="${a}" ${a===adminFilterState.a?'selected':''}>${a}</option>`).join('');
   }
-  // repopulate cat
   const cEl=document.getElementById('adm-f-c');
   if(cEl){
     const cats=[...new Set(allDOA.filter(r=>(!adminFilterState.sc||r.sc===adminFilterState.sc)&&(!adminFilterState.a||r.a===adminFilterState.a)).map(r=>r.c))].sort();
     cEl.disabled=!adminFilterState.a;
     cEl.innerHTML=`<option value="">All categories</option>`+cats.map(c=>`<option value="${c}" ${c===adminFilterState.c?'selected':''}>${c}</option>`).join('');
   }
-  // repopulate sub
   const sEl=document.getElementById('adm-f-s');
   if(sEl){
     const subs=[...new Set(allDOA.filter(r=>(!adminFilterState.sc||r.sc===adminFilterState.sc)&&(!adminFilterState.a||r.a===adminFilterState.a)&&(!adminFilterState.c||r.c===adminFilterState.c)).map(r=>r.s))].sort();
@@ -1147,7 +1177,6 @@ function adminShowRemovePreview(){
   preview.style.display='block';preview.innerHTML=`Will remove: <strong>[${rule.sc}] ${rule.a} / ${rule.c} / ${rule.s}</strong> — ${rule.r} (L${rule.lv}, ${rule.t})`;
 }
 
-
 const COUNTRY_LIST=["Singapore","China","Hong Kong","Taiwan","Korea","Japan","Indonesia","North America","Canada","India","Sri Lanka","Thailand","Cambodia","Philippines","Vietnam","Malaysia","Bangladesh","Australia","Myanmar","Brunei","Group"];
 
 function mtxAdmin(action){
@@ -1162,7 +1191,6 @@ function mtxAdmin(action){
   const allCats=[...new Set(allDOA.map(r=>r.c))].sort();
   const allSubs=[...new Set(allDOA.map(r=>r.s))].sort();
   const allRoles=[...new Set(getCONS().map(c=>c.r))].sort();
-  // Fix 3: country dropdown with Add new
   const countryOptHtml=`<option value="">— none / Group —</option>`+COUNTRY_LIST.map(c=>`<option value="${c}">${c}</option>`).join('')+`<option value="__new__">✚ Add new country…</option>`;
 
   if(action==='create-logic'){
@@ -1173,7 +1201,6 @@ function mtxAdmin(action){
     <div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doCreateLogic()">Create Rule</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
     ['al-sc','al-a','al-c','al-s'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>handleNewOption(id));});
   } else if(action==='update-logic'){
-    // Fix 4: cascading filter UI
     adminFilterState={action:'update-logic',sc:'',a:'',c:'',s:''};
     panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:8px">✎ Update Approval Logic</div>
     <div class="wb" style="margin-bottom:10px;font-size:13px">Filter rules using the dropdowns below, then select the rule to edit. Editing base rules saves an override.</div>
@@ -1238,7 +1265,6 @@ function loadLogicForEdit(){
   const typeOpts=['Approval','Scope Approval','Inform','Scope Inform','Inform & Consult','Scope Inform & Consult'].map(t=>`<option value="${t}">${t}</option>`).join('');
   const lvOpts='<option value="5">L5 — Country</option><option value="4">L4 — Functions</option><option value="3">L3 — Product</option><option value="2">L2 — Executive</option><option value="1">L1 — Board</option>';
   document.getElementById('al-upd-fields').innerHTML=buildLogicEditForm('al-upd-',lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,rule);
-  // lv and t selects are now set by buildLogicEditForm's setTimeout — no manual override needed
   ['al-upd-sc','al-upd-a','al-upd-c','al-upd-s'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>handleNewOption(id));});
   document.getElementById('al-upd-form').style.display='block';
 }
@@ -1265,16 +1291,10 @@ function doUpdateLogic(){
 function doRemoveLogic(){
   const idx=parseInt(document.getElementById('al-rm-sel').value);if(isNaN(idx)){showT('Select a rule first');return}
   const allDOA=getDOA();
-  if(idx<DOA.length){// base rule: add "removed" marker so it's filtered out
+  if(idx<DOA.length){
     DOA_CUSTOM.push({...allDOA[idx],_removed:true});
   } else {DOA_CUSTOM.splice(idx-DOA.length,1);}
   saveCustom();renderMatrix();closeMtxPanel();showT('Rule removed — applies to new requests');
-}
-// Override getDOA to filter removed markers
-function getDOA(){
-  const removedKeys=new Set(DOA_CUSTOM.filter(x=>x._removed).map(x=>`${x.sc}|${x.a}|${x.c}|${x.s}|${x.r}|${x.lv}`));
-  const base=DOA.filter(r=>!removedKeys.has(`${r.sc}|${r.a}|${r.c}|${r.s}|${r.r}|${r.lv}`));
-  return [...base,...DOA_CUSTOM.filter(x=>!x._removed)];
 }
 function doCreateContact(){
   const n=document.getElementById('co-n').value.trim(),r=document.getElementById('co-r').value.trim(),e=document.getElementById('co-e').value.trim(),lv=parseInt(document.getElementById('co-lv').value),co=document.getElementById('co-co').value.trim();
@@ -1287,7 +1307,6 @@ function loadContactForEdit(){
   if(idx===''){document.getElementById('co-upd-form').style.display='none';return}
   const c=getCONS()[parseInt(idx)];
   document.getElementById('co-upd-n').value=c.n;document.getElementById('co-upd-r').value=c.r;document.getElementById('co-upd-e').value=c.e;document.getElementById('co-upd-lv').value=String(c.lv);
-  // country dropdown: if value not in list, add it then select
   const coSel=document.getElementById('co-upd-co');if(coSel){const coVal=c.co||'';if(coVal&&![...coSel.options].some(o=>o.value===coVal)){const opt=document.createElement('option');opt.value=coVal;opt.textContent=coVal;coSel.insertBefore(opt,coSel.lastElementChild);}coSel.value=coVal;}
   document.getElementById('co-upd-form').style.display='block';
 }
@@ -1302,8 +1321,7 @@ function doUpdateContact(){
     const priorIdx=CONS_CUSTOM.findIndex(x=>`${x.n}|${x.r}|${x.e}`===origKey);
     if(priorIdx>-1)CONS_CUSTOM.splice(priorIdx,1);
     CONS_CUSTOM.push(entry);
-  }// base contact: deduplicated override
-  else{CONS_CUSTOM[idx-CONS.length]=entry;}
+  } else{CONS_CUSTOM[idx-CONS.length]=entry;}
   saveCustom();renderCons();closeMtxPanel();showT('Contact updated');
 }
 function doRemoveContact(){
@@ -1312,13 +1330,6 @@ function doRemoveContact(){
   else{CONS_CUSTOM.splice(idx-CONS.length,1);}
   saveCustom();renderCons();closeMtxPanel();showT('Contact removed');
 }
-// Override getCONS to filter removed markers
-function getCONS(){
-  const removedKeys=new Set(CONS_CUSTOM.filter(x=>x._removed).map(x=>`${x.n}|${x.r}|${x.e}`));
-  const base=CONS.filter(c=>!removedKeys.has(`${c.n}|${c.r}|${c.e}`));
-  return [...base,...CONS_CUSTOM.filter(x=>!x._removed)];
-}
-// Open the file store and migrate any legacy in-localStorage files into IndexedDB (runs once, safe to repeat).
 try{idbOpen().then(()=>migrateFilesToIDB()).catch(()=>{});}catch(e){}
 </script>
 </body>
