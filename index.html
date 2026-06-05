@@ -361,6 +361,7 @@ function getActiveLv(req){
 function doLogin(){
   const n=document.getElementById('ln').value.trim(),e=document.getElementById('le').value.trim(),co=document.getElementById('lc2').value;
   if(!n||!e){alert('Please enter your name and email');return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){alert('Please enter a valid email address (e.g. name@company.com)');return}
   me={n,e,co};localStorage.setItem('doa_me',JSON.stringify(me));_dataReady.then(()=>initApp()).catch(e=>alert('Failed to load DOA data ('+e.message+'). Please refresh.'));
 }
 function initApp(){
@@ -429,7 +430,7 @@ function onSub(){
   let html='';
   Object.keys(byLv).sort((a,b)=>b-a).forEach(lv=>{
     const rows=byLv[lv],hasA=rows.some(r=>isApv(r.t));
-    html+=`<div class="lg"><div class="ll"><span class="badge bgr" style="font-size:9px">L${lv}</span>${lvN[lv]||'Level '+lv} ${hasA?'<span class="badge bb" style="font-size:8px">APPROVAL REQUIRED</span>':'<span class="badge bw" style="font-size:8px">INFORM ONLY</span>'}</div>`;
+    html+=`<div class="lg"><div class="ll"><span class="badge bgr" style="font-size:9px">L${lv}</span>${lvN[lv]||'Level '+lv}</div>`;
     rows.forEach(r=>{
       const co=getCon(r.r,me?.co||'');
       html+=`<div class="ar"><div><div style="font-size:11px;font-weight:500">${r.r}${co.n&&co.n!==r.r?` <span style="color:var(--tx3);font-weight:400;font-size:10px">(${co.n})</span>`:''}</div><div style="font-size:12px;color:var(--tx3)">${co.e||''}</div></div><span class="badge ${tc(r.t)}">${r.t}</span></div>`;
@@ -564,8 +565,8 @@ function openModal(id){
         const isScopeApv=/scope/i.test(a.t);
         const naBtn=(isScopeApv||a.st==='N.A')?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
         const lockedHint=locked?`<span style="font-size:11px;color:var(--tx3);margin-left:6px">Locked${isScopeApv?' — or mark N.A to skip':''}</span>`:'';
-        const typeBadge=`<span class="badge ${tc(a.t)}" style="font-size:9px;margin-left:6px">${a.t} · ${isScopeApv?'optional':'required'}</span>`;
-        lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}${typeBadge}</div><div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${locked?'Pending':a.st}</span>${sendBtn} ${remindBtn}${attachBtn}${approveBtn} ${rejectBtn} ${naBtn}${lockedHint}</div></div>`;
+        const typeBadge=`<span class="badge ${tc(a.t)}" style="font-size:9px;margin-top:2px;display:inline-block">${a.t} · ${isScopeApv?'optional':'required'}</span>`;
+        lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}</div>${typeBadge}<div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${locked?'Pending':a.st}</span>${sendBtn} ${remindBtn}${attachBtn}${approveBtn} ${rejectBtn} ${naBtn}${lockedHint}</div></div>`;
       });
       lvH+='</div>';
     }
