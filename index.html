@@ -248,7 +248,7 @@ select option{white-space:normal;word-break:break-word}
       </div>
       <!-- Matrix admin panel -->
       <div id="mtx-admin-panel" style="display:none;background:var(--sur);border:.5px solid var(--bdr2);border-radius:var(--r);padding:16px 18px;margin-bottom:16px"></div>
-      <div style="overflow-x:auto"><table class="mtbl"><thead><tr><th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th>Level</th><th>Role</th><th>Type</th></tr></thead><tbody id="mtbl-body"></tbody></table></div>
+      <div id="mtx-timer" style="font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:6px;min-height:16px"></div><div style="overflow-x:auto"><table class="mtbl"><thead><tr><th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th>Level</th><th>Role</th><th>Type</th></tr></thead><tbody id="mtbl-body"></tbody></table></div>
     </div>
 
     <!-- CONTACTS -->
@@ -710,7 +710,9 @@ function renderMatrix(){
     if(mf.s)rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(mf.s.toLowerCase()));
     if(mf.a)rows=rows.filter(r=>r.a===mf.a);
     if(mf.t)rows=rows.filter(r=>r.t===mf.t);
+    const _t1=performance.now();
     body.innerHTML=rows.map(r=>`<tr><td><span class="badge bgr" style="font-size:9px">${r.sc||''}</span></td><td><span class="badge bgr" style="font-size:9px">${r.a}</span></td><td style="font-size:11px">${r.c}</td><td style="font-size:11px;max-width:180px">${r.s}</td><td style="font-size:10px;font-weight:500;color:var(--tx2)">${lvN[r.lv]||r.lv}</td><td style="font-size:11px;font-weight:500">${r.r}</td><td><span class="badge ${tc(r.t)}" style="font-size:9px">${r.t}</span></td></tr>`).join('')||'<tr><td colspan="7" class="es">No results.</td></tr>';
+    const _ms2=(performance.now()-_t1).toFixed(1);const _ti2=document.getElementById('mtx-timer');if(_ti2)_ti2.textContent='Showing '+rows.length+' filtered rows in '+_ms2+' ms';
     return;
   }
   // ── Grouped mode: 1 row per sub-category, detail rows built lazily on first expand ──
@@ -724,7 +726,10 @@ function renderMatrix(){
     const typeSummary=types.slice(0,2).map(t=>`<span class="badge ${tc(t)}" style="font-size:8px;margin-right:3px">${t}</span>`).join('')+(types.length>2?`<span style="font-size:9px;color:var(--tx3)"> +${types.length-2}</span>`:'');
     parts.push(`<tr class="rrow" onclick="toggleMtxGroup(${i},this)" style="cursor:pointer"><td><span class="badge bgr" style="font-size:9px">${sc}</span></td><td><span class="badge bgr" style="font-size:9px">${a}</span></td><td style="font-size:11px">${c}</td><td style="font-size:11px;font-weight:500">${s}</td><td colspan="3" style="text-align:right;white-space:nowrap;padding-right:10px"><span style="font-size:10px;color:var(--tx3);margin-right:8px">${rules.length} rule${rules.length!==1?'s':''}</span>${typeSummary}<span class="mtx-chv" style="font-size:15px;color:var(--tx3);margin-left:8px;display:inline-block;transition:transform .15s">&#8250;</span></td></tr>`);
   }
+  const _t1=performance.now();
   body.innerHTML=parts.join('')||'<tr><td colspan="7" class="es">No results.</td></tr>';
+  const _ms=(performance.now()-_t1).toFixed(1);
+  const _ti=document.getElementById('mtx-timer');if(_ti)_ti.textContent='Rendered '+gi+' rows in '+_ms+' ms';
 }
 function toggleMtxGroup(i,rowEl){
   const existing=document.querySelectorAll(`tr[data-gi="${i}"]`);
