@@ -1349,5 +1349,27 @@ function doRemoveContact(){
 }
 try{idbOpen().then(()=>migrateFilesToIDB()).catch(()=>{});}catch(e){}
 </script>
+    <script>
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+msalInstance.initialize().then(() => {
+    msalInstance.handleRedirectPromise().then((response) => {
+        if (response) {
+            console.log("Logged in:", response.account.username);
+        } else {
+            const accounts = msalInstance.getAllAccounts();
+            if (accounts.length === 0) {
+                msalInstance.loginPopup({ scopes: ["User.Read"] })
+                    .then(response => {
+                        console.log("Logged in as:", response.account.username);
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+            }
+        }
+    });
+});
+</script>
 </body>
 </html>
