@@ -2,1374 +2,778 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DOA Tracker — Ben Line Group</title>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
-<script>
-const msalConfig = {
-    auth: {
-        clientId: "753c233d-8879-43c5-b5e9-b9b2f7ab5653",
-        authority: "https://login.microsoftonline.com/8fb1c748-1a93-4acb-a71a-4c07d2f055c4",
-        redirectUri: "https://gigichu001.github.io/doa-tracker-/"
-    }
-};
-</script>
-<link href="https://fonts.googleapis.com...
-
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DOA Tracker — Ben Line Group</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Finance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{--bg:#f5f4f0;--sur:#fff;--sur2:#f0efe9;--bdr:#e2e0d8;--bdr2:#d0cec5;--tx:#1a1916;--tx2:#6b6960;--tx3:#9e9c94;--ac:#1e3a5f;--acl:#e8eef5;--gr:#1a5c3a;--grb:#e6f2eb;--am:#7a4f00;--amb:#fdf3e0;--rd:#7a1e1e;--rdb:#fbe8e8;--bl:#1a3a6b;--blb:#e8eef8;--pu:#4a1a7a;--pub:#f0e8fa;--tl:#0a5c5c;--tlb:#e0f2f2;--r:10px;--rs:6px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5;min-height:100vh}
-.app{display:flex;min-height:100vh}
-.side{width:220px;background:var(--ac);color:#fff;flex-shrink:0;display:flex;flex-direction:column;padding:20px 0;position:sticky;top:0;height:100vh}
-.slogo{padding:0 18px 18px;border-bottom:1px solid rgba(255,255,255,.12)}
-.slogo h1{font-size:14px;font-weight:600}.slogo p{font-size:10px;opacity:.5;font-family:'DM Mono',monospace;margin-top:2px}
-.snav{padding:12px 0;flex:1}
-.ni{display:flex;align-items:center;gap:8px;padding:8px 18px;font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;border-left:2px solid transparent;transition:all .15s}
-.ni:hover{color:#fff;background:rgba(255,255,255,.06)}
-.ni.active{color:#fff;border-left-color:#fff;background:rgba(255,255,255,.1);font-weight:500}
-.ndot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6}
-.nbadge{margin-left:auto;background:#e25555;color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;display:none}
-.suser{padding:12px 18px;border-top:1px solid rgba(255,255,255,.12);font-size:11px;opacity:.6}
-.suser strong{display:block;font-size:12px;opacity:1;margin-bottom:1px}
-.main{flex:1;padding:28px 32px;max-width:1100px}
-.page{display:none}.page.active{display:block}
-.ph{margin-bottom:22px}.ph h2{font-size:20px;font-weight:600;letter-spacing:-.02em}.ph p{color:var(--tx2);font-size:12px;margin-top:3px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
-.sc{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:13px 16px}
-.sc .sl{font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
-.sc .sv{font-size:24px;font-weight:600;letter-spacing:-.03em;margin-top:3px;font-family:'DM Mono',monospace}
-.sc .ss{font-size:10px;color:var(--tx3);margin-top:1px}
-.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0}
-.bg{background:var(--grb);color:var(--gr)}.br{background:var(--rdb);color:var(--rd)}.bb{background:var(--blb);color:var(--bl)}.bw{background:var(--amb);color:var(--am)}.bgr{background:var(--sur2);color:var(--tx2)}.bp{background:var(--pub);color:var(--pu)}.bt{background:var(--tlb);color:var(--tl)}
-.btn{padding:5px 11px;border-radius:var(--rs);font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:.5px solid var(--bdr2);background:var(--sur);color:var(--tx);transition:all .12s}
-.btn:hover{background:var(--sur2)}
-.btn-ok{border-color:#1a5c3a;color:var(--gr)}.btn-ok:hover{background:var(--grb)}
-.btn-ok.selected{background:var(--grb);border-width:1.5px;font-weight:600}
-.btn-no.selected{background:var(--rdb);border-width:1.5px;font-weight:600}
-.btn-dim{opacity:0.5}
-.btn-no{border-color:#7a1e1e;color:var(--rd)}.btn-no:hover{background:var(--rdb)}
-.btn-q{border-color:#7a4f00;color:var(--am)}.btn-q:hover{background:var(--amb)}
-.btn-p{background:var(--ac);color:#fff;border-color:var(--ac);padding:7px 16px;font-size:12px}.btn-p:hover{background:#16304f}
-.btn-em{background:var(--blb);color:var(--bl);border-color:var(--bl);font-size:10px;padding:3px 8px}.btn-em:hover{background:#c8d8f0}
-.fc{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:22px 26px;max-width:680px}
-.fr{margin-bottom:14px}
-.fl{font-size:11px;font-weight:500;color:var(--tx2);display:block;margin-bottom:4px}
-.fs,.fi,.fta{width:100%;padding:8px 11px;border:.5px solid var(--bdr2);border-radius:var(--rs);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--tx);background:var(--sur);appearance:none;transition:border-color .15s}
-.fs:focus,.fi:focus,.fta:focus{outline:none;border-color:var(--ac)}
-.fs:disabled{opacity:.4;cursor:not-allowed}
-select option{white-space:normal;word-break:break-word}
-.fta{resize:vertical;min-height:70px}
-.tc{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.amap{background:var(--sur2);border:.5px solid var(--bdr);border-radius:var(--r);padding:14px 16px;margin-top:16px}
-.amap h4{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
-.lg{margin-bottom:12px}
-.ll{font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
-.ar{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:var(--sur);border-radius:var(--rs);margin-bottom:3px;gap:6px;border:.5px solid var(--bdr)}
-.rrow{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px 16px;margin-bottom:7px;cursor:pointer;transition:border-color .15s}
-.rrow:hover{border-color:var(--bdr2);box-shadow:0 2px 6px rgba(0,0,0,.04)}
-.rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.rtitle{font-size:12px;font-weight:500;flex:1}
-.rm{font-size:10px;color:var(--tx3);margin-top:4px}
-.pb{height:3px;background:var(--bdr);border-radius:2px;margin-top:7px;overflow:hidden}
-.pf{height:100%;border-radius:2px;background:var(--gr);transition:width .3s}
-.mo{display:none;position:fixed;inset:0;background:rgba(26,25,22,.5);z-index:100;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-y:auto}
-.mo.open{display:flex}
-.md{background:var(--sur);border-radius:var(--r);width:100%;max-width:680px;padding:22px 24px;position:relative}
-.mc{position:absolute;top:12px;right:12px;background:var(--sur2);border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;color:var(--tx2);display:flex;align-items:center;justify-content:center}
-.mc:hover{background:var(--bdr)}
-.md h3{font-size:15px;font-weight:600;margin-bottom:3px}
-.mm{font-size:11px;color:var(--tx3);margin-bottom:14px}
-.ml{margin-bottom:12px}
-.mlh{font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-/* APPROVAL card style — used for both approval AND inform rows now */
-.ma{display:flex;align-items:center;gap:7px;padding:10px 13px;background:var(--sur2);border-radius:var(--rs);margin-bottom:3px;flex-wrap:wrap;border:.5px solid var(--bdr)}
-/* Inform/consult card gets amber tint to stay visually distinct */
-.ma-inf{background:#fffbf0;border-color:#e8dfc0;}
-.mal{flex:1;min-width:0}
-.man{font-size:13px;font-weight:600;margin-bottom:2px}
-.mae{font-size:12px;color:var(--tx3);margin-top:1px}
-.maa{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
-.thr{border-top:.5px solid var(--bdr);padding-top:12px;margin-top:12px}
-.tht{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.tm{display:flex;gap:8px;margin-bottom:10px}
-.tav{width:26px;height:26px;border-radius:50%;background:var(--acl);color:var(--ac);font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace}
-.tb{background:var(--sur2);border-radius:0 var(--r) var(--r) var(--r);padding:8px 10px;flex:1}
-.tb.mine{background:var(--acl);border-radius:var(--r) 0 var(--r) var(--r)}
-.tw{font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:1px}
-.tt{font-size:12px}
-.ti{font-size:9px;color:var(--tx3);margin-top:2px;font-family:'DM Mono',monospace}
-.rb{margin-top:8px}
-.rb textarea{width:100%;padding:7px 10px;border:.5px solid var(--bdr2);border-radius:var(--rs);font-size:12px;font-family:'DM Sans',sans-serif;resize:vertical;min-height:55px;color:var(--tx);background:var(--sur)}
-.rb textarea:focus{outline:none;border-color:var(--ac)}
-.ras{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
-.mtbl{width:100%;border-collapse:collapse;font-size:11px}
-.mtbl th{background:var(--sur2);border:.5px solid var(--bdr);padding:7px 9px;text-align:left;font-size:10px;font-weight:600;color:var(--tx2);white-space:nowrap}
-.mtbl td{border:.5px solid var(--bdr);padding:6px 9px;vertical-align:middle}
-.mtbl tr:hover td{background:var(--sur2)}
-.tbr{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
-.si{padding:6px 11px;border:.5px solid var(--bdr2);border-radius:var(--rs);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--tx);background:var(--sur);width:200px}
-.si:focus{outline:none;border-color:var(--ac)}
-.fsel{padding:6px 11px;border:.5px solid var(--bdr2);border-radius:var(--rs);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--tx);background:var(--sur)}
-.es{text-align:center;padding:32px;color:var(--tx3);font-size:12px}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--ac);color:#fff;padding:10px 15px;border-radius:var(--rs);font-size:12px;font-weight:500;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
-.dvd{height:.5px;background:var(--bdr);margin:16px 0}
-.ib{background:var(--blb);border:.5px solid #c0d0e8;border-radius:var(--rs);padding:10px 13px;font-size:11px;color:var(--bl);margin-bottom:14px}
-.wb{background:var(--amb);border:.5px solid #e0c888;border-radius:var(--rs);padding:10px 13px;font-size:11px;color:var(--am);margin-bottom:12px}
-.seq{display:flex;align-items:center;gap:0;margin:8px 0;flex-wrap:wrap}
-.sc-sub{font-size:10px;color:var(--tx3);margin-top:1px}
-.ss{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:500;background:var(--sur2);color:var(--tx3);border:.5px solid var(--bdr)}
-.ss.act{background:var(--amb);color:var(--am);border-color:#e8c870}
-.ss.don{background:var(--grb);color:var(--gr);border-color:#90d0a8}
-.ss.rej{background:var(--rdb);color:var(--rd);border-color:#d09090}
-.sa{font-size:11px;color:var(--tx3);padding:0 3px}
-.lov{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center}
-.lc{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:32px 36px;width:380px;text-align:center}
-.lc h2{font-size:19px;font-weight:600;margin-bottom:5px}
-.lc p{font-size:12px;color:var(--tx2);margin-bottom:20px}
-.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-.cc{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
-.ci{width:32px;height:32px;border-radius:50%;background:var(--acl);color:var(--ac);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace}
-.cn{font-size:12px;font-weight:500}.cr{font-size:10px;color:var(--tx3);margin-top:1px}.ce{font-size:10px;color:var(--bl);margin-top:2px}
-.tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:500;margin-top:4px;margin-right:2px}
-.tl1{background:#f0e8fa;color:#4a1a7a}.tl2{background:#e8eef8;color:#1a3a6b}.tl3{background:#e6f2eb;color:#1a5c3a}.tl4{background:#fdf3e0;color:#7a4f00}.tl5{background:#fbe8e8;color:#7a1e1e}
-.pt{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
-.ehmo{display:none;position:fixed;inset:0;background:rgba(26,25,22,.6);z-index:200;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-y:auto}
-.ehmo.open{display:flex}
-.ehmd{background:var(--sur);border-radius:var(--r);width:100%;max-width:620px;padding:20px 22px;position:relative;max-height:85vh;overflow-y:auto}
-.eh-entry{padding:8px 10px;background:var(--sur2);border-radius:var(--rs);margin-bottom:6px;border:.5px solid var(--bdr)}
-.eh-sent{border-left:3px solid var(--bl)}
-.eh-reply{border-left:3px solid var(--gr)}
-.eh-file{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--sur);border:.5px solid var(--bdr2);border-radius:20px;font-size:10px;color:var(--bl);cursor:pointer;margin:2px}
-.eh-file:hover{background:var(--blb)}
-.carry-banner{background:var(--amb);border:.5px solid #e0c888;border-radius:var(--rs);padding:8px 10px;font-size:10px;color:var(--am);margin-bottom:8px}
-/* PAGINATION controls */
-.pg-bar{display:flex;align-items:center;gap:6px;margin:12px 0;flex-wrap:wrap}
-.pg-btn{padding:4px 10px;border-radius:var(--rs);font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:.5px solid var(--bdr2);background:var(--sur);color:var(--tx);transition:all .12s}
-.pg-btn:hover:not(:disabled){background:var(--sur2)}
-.pg-btn:disabled{opacity:.35;cursor:not-allowed}
-.pg-btn.active{background:var(--ac);color:#fff;border-color:var(--ac)}
-.pg-info{font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;margin-left:4px}
+:root {
+  --bg:#f5f0e8;--bg2:#ede7d9;--bg3:#e4dccb;
+  --surface:#faf7f2;--surface2:#f0ebe0;
+  --border:rgba(100,80,50,0.12);--border2:rgba(100,80,50,0.22);
+  --text:#2c2416;--text2:#6b5c42;--text3:#a8947a;
+  --accent:#7c5c38;--accent2:#b08050;
+  --green:#3a7d5e;--amber:#c07820;--red:#b84040;
+  --r:14px;--r-sm:9px;
+  --font-mono:'DM Mono',monospace;
+  --font-head:'Lora',serif;
+  --font-body:'DM Sans',sans-serif;
+  --shadow:0 1px 4px rgba(100,80,50,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:110px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(245,240,232,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:52px 20px 14px;display:flex;justify-content:space-between;align-items:flex-end;border-bottom:0.5px solid var(--border2)}
+.topbar-month{font-family:var(--font-head);font-size:22px;font-weight:600;color:var(--text)}
+.topbar-sub{font-family:var(--font-mono);font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.curr-toggle{display:flex;background:var(--bg3);border-radius:99px;padding:3px;gap:2px}
+.curr-btn{font-family:var(--font-mono);font-size:12px;padding:5px 14px;border-radius:99px;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all .2s}
+.curr-btn.active{background:var(--accent);color:#fff}
+.scroll{padding:18px 16px 0}
+.card{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-label{font-family:var(--font-mono);font-size:11px;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ov-item{background:var(--surface2);border-radius:var(--r-sm);padding:14px;border:0.5px solid var(--border)}
+.ov-lbl{font-family:var(--font-mono);font-size:11px;color:var(--text3);letter-spacing:.06em;margin-bottom:6px}
+.ov-val{font-family:var(--font-mono);font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1}
+.ov-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.ov-val.green{color:var(--green)}.ov-val.amber{color:var(--amber)}.ov-val.red{color:var(--red)}
+.prog-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px}
+.prog-pct{font-family:var(--font-mono);font-size:13px;font-weight:500}
+.prog-track{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.edit-btn{font-family:var(--font-mono);font-size:11px;color:var(--text3);background:none;border:0.5px solid var(--border2);border-radius:99px;padding:3px 10px;cursor:pointer;letter-spacing:.05em;transition:all .2s;flex-shrink:0}
+.edit-btn.on{color:var(--accent);border-color:var(--accent);background:rgba(124,92,56,.06)}
+.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--r-sm);padding:3px;margin-bottom:14px}
+.tab{flex:1;font-family:var(--font-body);font-size:13px;padding:7px 0;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all .2s}
+.tab.active{background:var(--surface);color:var(--text);font-weight:500;border:0.5px solid var(--border2)}
+.leg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.chart-wrap{position:relative;width:100%}
+.cat-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.cat-row:last-child{border-bottom:none}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cat-name{font-size:14px;color:var(--text);flex:1}
+.cat-bar-wrap{width:72px}
+.cat-mini-track{height:3px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.cat-mini-fill{height:100%;border-radius:99px}
+.cat-left-amt{font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:2px;text-align:right}
+.cat-amount{font-family:var(--font-mono);font-size:14px;font-weight:500;min-width:62px;text-align:right}
+.del-btn{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;display:none}
+.edit-mode .del-btn{display:block}
+.inline-inp{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:4px 6px;font-family:var(--font-mono);font-size:13px;color:var(--text);outline:none;width:72px;text-align:right}
+.inline-inp:focus{border-color:var(--accent2)}
+.inline-text-inp{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:4px 6px;font-family:var(--font-body);font-size:13px;color:var(--text);outline:none;flex:1;min-width:60px}
+.inline-text-inp:focus{border-color:var(--accent2)}
+.add-row{display:none;flex-wrap:wrap;gap:6px;padding:10px 0;border-top:0.5px solid var(--border)}
+.add-row.show{display:flex}
+.add-inp{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:7px 9px;font-family:var(--font-body);font-size:13px;color:var(--text);outline:none;flex:1;min-width:60px}
+.add-inp:focus{border-color:var(--accent2)}
+.add-sel{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:7px 9px;font-family:var(--font-body);font-size:13px;color:var(--text);outline:none;cursor:pointer}
+.add-btn{background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:13px;padding:7px 14px;cursor:pointer;font-family:var(--font-body);white-space:nowrap}
+.sav-row{padding:12px 0;border-bottom:0.5px solid var(--border)}
+.sav-row:last-child{border-bottom:none}
+.sav-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.sav-title{font-size:14px;color:var(--text);font-weight:500}
+.sav-period{font-size:11px;color:var(--text3);margin-top:2px}
+.sav-nums{font-family:var(--font-mono);font-size:12px;color:var(--text2);text-align:right}
+.tx-hdr-btn{width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;color:var(--text2);cursor:pointer;padding:0;font-family:var(--font-body);font-size:13px}
+.tx-icon{font-size:16px;color:var(--text3);transition:transform .3s;display:inline-block}
+.tx-icon.open{transform:rotate(180deg)}
+.tx-list{overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(.4,0,.2,1)}
+.tx-list.open{max-height:1200px;overflow-y:auto}
+.tx-row{display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-top:0.5px solid var(--border)}
+.tx-date{font-family:var(--font-mono);font-size:11px;color:var(--text3);min-width:44px;padding-top:2px}
+.tx-info{flex:1}
+.tx-cat{color:var(--text);font-size:13px}
+.tx-remark{color:var(--text3);font-size:12px;margin-top:1px}
+.tx-right{display:flex;align-items:center;gap:6px}
+.tx-amount{font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--red);white-space:nowrap}
+.tx-amount.inc{color:var(--green)}
+/* filter bar */
+.filter-bar{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;border-top:0.5px solid var(--border)}
+.filter-sel{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:5px 8px;font-family:var(--font-body);font-size:12px;color:var(--text);outline:none;cursor:pointer;flex:1;min-width:80px}
+.form-group{margin-bottom:12px}
+.form-label{font-family:var(--font-mono);font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:5px}
+.form-input,.form-select{width:100%;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-size:16px;font-family:var(--font-body);outline:none;-webkit-appearance:none;appearance:none}
+.form-input:focus,.form-select:focus{border-color:var(--accent2)}
+.type-row{display:flex;gap:8px;margin-bottom:14px}
+.type-btn{flex:1;padding:10px;border-radius:var(--r-sm);border:0.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:14px;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.type-btn.exp{background:rgba(184,64,64,.1);color:var(--red);border-color:rgba(184,64,64,.25)}
+.type-btn.inc{background:rgba(58,125,94,.1);color:var(--green);border-color:rgba(58,125,94,.25)}
+.submit-btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;font-size:16px;font-weight:600;font-family:var(--font-body);cursor:pointer;margin-top:6px}
+.submit-btn:active{opacity:.85}
+.fab{position:fixed;bottom:28px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(124,92,56,.35);z-index:200;transition:transform .15s}
+.fab:active{transform:scale(.93)}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(44,36,22,.45);backdrop-filter:blur(4px);z-index:300}
+.backdrop.open{display:block}
+.sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--border2);padding:16px 20px 48px;z-index:400;transition:transform .35s cubic-bezier(.32,.72,0,1)}
+.sheet.open{transform:translateX(-50%) translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--bg3);border-radius:99px;margin:0 auto 18px}
+.sheet-title{font-family:var(--font-head);font-size:18px;font-weight:600;margin-bottom:18px;color:var(--text)}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-12px);background:var(--surface);border:0.5px solid var(--green);color:var(--green);font-family:var(--font-mono);font-size:13px;padding:10px 20px;border-radius:99px;opacity:0;transition:all .3s;z-index:500;white-space:nowrap;box-shadow:var(--shadow)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.edit-panel{background:var(--bg2);border-radius:var(--r-sm);padding:14px;margin-bottom:12px;border:0.5px solid var(--border)}
+.ep-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 </style>
 </head>
 <body>
-
-<div class="lov" id="lov">
-  <div class="lc">
-    <h2>DOA Tracker</h2>
-    <p>Ben Line Group</p>
-    <div style="text-align:left;margin-bottom:16px">
-      <div class="fr"><label class="fl">Your full name</label><input class="fi" id="ln" placeholder="e.g. Gigi Chu"/></div>
-      <div class="fr"><label class="fl">Your email</label><input class="fi" id="le" placeholder="gigi.chu@benline.com"/></div>
-      <div class="fr"><label class="fl">Your country</label>
-        <select class="fs" id="lc2"><option value="">Select country</option><option>Singapore</option><option>China</option><option>Hong Kong</option><option>Taiwan</option><option>Korea</option><option>Japan</option><option>Indonesia</option><option>North America</option><option>Canada</option><option>India</option><option>Sri Lanka</option><option>Thailand</option><option>Cambodia</option><option>Philippines</option><option>Vietnam</option><option>Malaysia</option><option>Bangladesh</option><option>Australia</option><option>Myanmar</option><option>Brunei</option><option>Group</option></select>
-      </div>
-    </div>
-    <button class="btn btn-p" style="width:100%" onclick="doLogin()">Enter DOA Tracker</button>
-    <div style="font-size:10px;color:var(--tx3);margin-top:10px">Data saved locally in this browser. Safe to test.</div>
+<div class="toast" id="toast"></div>
+<div class="topbar">
+  <div>
+    <div class="topbar-sub">Finance</div>
+    <div class="topbar-month" id="topbar-month">June 2026</div>
+  </div>
+  <div class="curr-toggle">
+    <button class="curr-btn active" onclick="setCurrency('SGD')">SGD</button>
+    <button class="curr-btn" onclick="setCurrency('HKD')">HKD</button>
   </div>
 </div>
-<div class="app" id="app" style="display:none">
-  <aside class="side">
-    <div class="slogo"><h1>DOA Tracker</h1><p>Ben Line Group</p></div>
-    <nav class="snav">
-      <div class="ni active" onclick="go('dashboard',this)"><span class="ndot"></span>Dashboard <span class="nbadge" id="bopen">0</span></div>
-      <div class="ni" onclick="go('new',this)"><span class="ndot"></span>New Request</div>
-      <div class="ni" onclick="go('matrix',this)"><span class="ndot"></span>DOA Matrix</div>
-      <div class="ni" onclick="go('contacts',this)"><span class="ndot"></span>Contacts</div>
-    </nav>
-    <div class="suser"><strong id="suname">—</strong><span id="suemail"></span></div>
-    <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.1)">
-      <button onclick="clearAllData()" style="width:100%;padding:7px;background:rgba(122,30,30,.7);border:none;border-radius:6px;color:#fff;font-size:11px;font-family:DM Sans,sans-serif;cursor:pointer;font-weight:500">🗑 Clear all my data</button>
-      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:5px;text-align:center">Removes all saved requests &amp; login</div>
+<div class="scroll">
+  <!-- OVERVIEW -->
+  <div class="card">
+    <div class="card-label">
+      <span>Overview</span>
+      <button class="edit-btn" id="ov-btn" onclick="toggleOvEdit()">edit</button>
     </div>
-  </aside>
-  <main class="main">
-
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
-      <div class="ph">
-        <h2 id="greet">Dashboard</h2><p>Delegation of Authority — approval tracking</p>
-      </div>
-      <div class="stats">
-        <div class="sc"><div class="sl">My open requests</div><div class="sv" id="st1">0</div><div class="sc-sub">Submitted by me</div></div>
-        <div class="sc"><div class="sl">Pending approvals</div><div class="sv" id="st2" style="color:var(--am)">0</div><div class="sc-sub">Awaiting response</div></div>
-        <div class="sc"><div class="sl">Completed</div><div class="sv" id="st4" style="color:var(--gr)">0</div><div class="sc-sub">Fully approved</div></div>
-      </div>
-      <div class="ib">💡 <strong>How it works:</strong> Submit a request → system shows required approvers by level → send Level 5 emails first → only after Level 5 is fully approved do Level 4 emails unlock → track each response here.</div>
-      <div class="ph" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:18px 0 10px">
-        <div class="pt" style="margin:0">Your requests</div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button class="btn" id="export-select-btn" onclick="toggleExportMode()" style="font-size:11px;border-color:var(--bl);color:var(--bl)">☐ Export</button>
-          <button class="btn btn-p" id="export-confirm-btn" onclick="exportSelectedPDF()" style="display:none;font-size:11px">⬇ Export Selected</button>
-          <button class="btn" id="export-cancel-btn" onclick="cancelExportMode()" style="display:none;font-size:11px">Cancel</button>
-          <span id="export-count-label" style="display:none;font-size:10px;color:var(--tx3)">0 selected</span>
+    <div id="ov-edit-panel" style="display:none">
+      <div class="edit-panel">
+        <div class="ep-grid">
+          <div><div class="form-label">Budget (<span id="ov-edit-curr-lbl">SGD</span>)</div><input class="form-input" type="number" id="ov-budget-inp" style="padding:8px 10px;font-size:15px"></div>
+          <div><div class="form-label">Income (<span id="ov-edit-curr-lbl2">SGD</span>)</div><input class="form-input" type="number" id="ov-income-inp" style="padding:8px 10px;font-size:15px"></div>
+          <div><div class="form-label">Savings bal (<span id="ov-edit-curr-lbl3">SGD</span>)</div><input class="form-input" type="number" id="ov-savings-inp" style="padding:8px 10px;font-size:15px"></div>
         </div>
-      </div>
-      <div id="dash-list"></div>
-    </div>
-
-    <!-- NEW REQUEST -->
-    <div class="page" id="page-new">
-      <div class="ph"><h2>New DOA Request</h2><p>Select your action — required approvers appear automatically</p></div>
-      <div class="fc">
-        <div style="font-size:11px;color:var(--tx2);margin-bottom:14px">Submitting as <strong id="req-as-name">—</strong> · <span id="req-as-email" style="color:var(--tx3)"></span> · <span id="req-as-country" style="color:var(--tx3)"></span></div>
-        <div class="dvd"></div>
-        <div class="fr"><label class="fl">Request title <span style="color:var(--tx3);font-weight:400">(short label to identify this request)</span></label><input class="fi" id="rtitle" placeholder="e.g. Singapore — Q3 CAPEX Equipment Purchase"/></div>
-        <div class="fr"><label class="fl">Product / Function Scope</label>
-          <select class="fs" id="sscope" onchange="onScope()">
-            <option value="">Select scope</option>
-            <option value="All">All / Group Level</option>
-            <option value="MAS">MAS (Marine Agency Services)</option>
-            <option value="Liner">Liner (Liner Agency Services)</option>
-            <option value="Logistics">Logistics</option>
-            <option value="Group Compliance">Group Compliance</option>
-            <option value="Group Transformation">Group Transformation</option>
-            <option value="Group Technology">Group Technology</option>
-            <option value="Group Risk, HSEQ &amp; Insurance">Group Risk, HSEQ &amp; Insurance</option>
-            <option value="Group HR">Group Human Resource</option>
-            <option value="Group Finance">Group Finance</option>
-            <option value="Group Procurement">Group Central Procurement</option>
-          </select>
-        </div>
-        <div class="fr"><label class="fl">Functional area</label><select class="fs" id="sarea" onchange="onArea()" disabled><option value="">— select scope first —</option></select></div>
-        <div class="fr"><label class="fl">Category</label><select class="fs" id="scat" onchange="onCat()" disabled><option value="">— select area first —</option></select></div>
-        <div class="fr"><label class="fl">Sub-category / action</label><select class="fs" id="ssub" onchange="onSub()" disabled><option value="">— select category first —</option></select></div>
-        <div class="fr"><label class="fl">Purpose / justification <span style="color:var(--tx3);font-weight:400">(shown in emails to approvers)</span></label><textarea class="fta" id="rpurpose" placeholder="Describe why this action is needed and any relevant context..."></textarea></div>
-        <div id="amap" style="display:none">
-          <div class="amap"><h4>Required approvals for this action</h4><div id="alvls"></div></div>
-          <div style="margin-top:10px;padding:9px 12px;background:var(--sur2);border-radius:var(--rs);font-size:11px;color:var(--tx2)"><strong>Sequential:</strong> Level 5 emails go first. Level 4 only unlocks after all Level 5 approvals are received.</div>
-          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-p" onclick="submitReq()">Submit Request</button>
-            <button class="btn" onclick="clearForm()">Clear</button>
-          </div>
-        </div>
+        <button class="add-btn" style="width:100%;padding:9px" onclick="saveOv()">Save</button>
       </div>
     </div>
-
-    <!-- DOA MATRIX -->
-    <div class="page" id="page-matrix">
-      <div class="ph"><h2>DOA Matrix</h2><p>Full approval rules from DOA_Matrix_v4</p></div>
-      <div class="tbr">
-        <input class="si" placeholder="Search matrix..." oninput="fMtx(this.value)"/>
-        <select class="fsel" onchange="fMtxA(this.value)"><option value="">All areas</option><option>HR</option><option>Finance</option><option>Procurement</option><option>Technology</option><option>Legal &amp; Compliance</option><option>Customer Contracts</option></select>
-        <select class="fsel" onchange="fMtxT(this.value)"><option value="">All types</option><option>Approval</option><option>Scope Approval</option><option>Inform</option><option>Scope Inform</option><option>Inform &amp; Consult</option><option>Scope Inform &amp; Consult</option></select>
+    <div class="ov-grid">
+      <div class="ov-item">
+        <div class="ov-lbl">Remaining</div>
+        <div class="ov-val green" id="ov-remaining">—</div>
+        <div class="ov-sub" id="ov-curr-sub">budget − used</div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:10px 12px;background:var(--sur2);border:.5px solid var(--bdr);border-radius:var(--rs)">
-        <span style="font-size:10px;font-weight:600;color:var(--tx3);align-self:center;margin-right:4px;text-transform:uppercase;letter-spacing:.05em">Admin:</span>
-        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--bl);color:var(--bl)" onclick="mtxAdmin('create-logic')">＋ Create Approval Logic</button>
-        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--gr);color:var(--gr)" onclick="mtxAdmin('update-logic')">✎ Update Approval Logic</button>
-        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--rd);color:var(--rd)" onclick="mtxAdmin('remove-logic')">✕ Remove Approval Logic</button>
-        <div style="width:.5px;background:var(--bdr2);margin:0 3px;align-self:stretch"></div>
-        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--bl);color:var(--bl)" onclick="mtxAdmin('create-contact')">＋ Create Contact</button>
-        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--gr);color:var(--gr)" onclick="mtxAdmin('update-contact')">✎ Update Contact</button>
-        <button class="btn" style="font-size:10px;padding:4px 9px;border-color:var(--rd);color:var(--rd)" onclick="mtxAdmin('remove-contact')">✕ Remove Contact</button>
+      <div class="ov-item">
+        <div class="ov-lbl">Savings balance</div>
+        <div class="ov-val" id="ov-savings-disp">—</div>
+        <div class="ov-sub" id="ov-savings-sub">SGD</div>
       </div>
-      <!-- Matrix admin panel -->
-      <div id="mtx-admin-panel" style="display:none;background:var(--sur);border:.5px solid var(--bdr2);border-radius:var(--r);padding:16px 18px;margin-bottom:16px"></div>
-      <!-- PAGINATION BAR (top) -->
-      <div id="pg-bar-top" class="pg-bar"></div>
-      <div style="overflow-x:auto"><table class="mtbl"><thead><tr><th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th colspan="3" style="text-align:right;padding-right:12px">Summary</th></tr></thead><tbody id="mtbl-body"></tbody></table></div>
-      <!-- PAGINATION BAR (bottom) -->
-      <div id="pg-bar-bot" class="pg-bar" style="margin-top:10px"></div>
     </div>
-
-    <!-- CONTACTS -->
-    <div class="page" id="page-contacts">
-      <div class="ph"><h2>Contacts</h2><p>All approver contacts — Ben Line Group</p></div>
-      <div id="con-grid"></div>
+    <div class="prog-row">
+      <span id="ov-prog-lbl">Budget used</span>
+      <span class="prog-pct" id="ov-pct">—</span>
     </div>
+    <div class="prog-track"><div class="prog-fill" id="ov-bar" style="width:0%"></div></div>
+  </div>
 
-  </main>
+  <!-- CHARTS -->
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('donut',this)">Category</button>
+      <button class="tab" onclick="switchTab('savings',this)">Savings</button>
+    </div>
+    <div id="tab-donut">
+      <div class="leg" id="donut-leg"></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="donutChart" role="img" aria-label="Spending by category"></canvas></div>
+    </div>
+    <div id="tab-savings" style="display:none">
+      <div id="sav-list"></div>
+      <button class="edit-btn" id="sav-btn" style="margin-top:10px" onclick="toggleSavEdit()">edit targets</button>
+      <div id="sav-edit-panel" style="display:none;margin-top:12px">
+        <div class="edit-panel" id="sav-edit-fields"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="card" id="cat-card">
+    <div class="card-label">
+      <span>By category · left</span>
+      <button class="edit-btn" id="cat-btn" onclick="toggleCatEdit()">edit</button>
+    </div>
+    <div id="cat-list"></div>
+    <div class="add-row" id="cat-add-row">
+      <input class="add-inp" type="text" id="cat-new-name" placeholder="Name">
+      <input class="add-inp" type="text" id="cat-new-emoji" placeholder="Emoji" style="max-width:56px">
+      <input class="add-inp" type="number" id="cat-new-bgt" placeholder="Budget (SGD)" style="max-width:100px">
+      <button class="add-btn" onclick="addCat()">Add</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="card" id="tx-card">
+    <button class="tx-hdr-btn" onclick="toggleTx()">
+      <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3)">History</span>
+      <span class="tx-icon" id="tx-icon">▾</span>
+    </button>
+    <!-- filter bar always visible after open -->
+    <div class="filter-bar" id="filter-bar" style="display:none">
+      <select class="filter-sel" id="f-filter-cat" onchange="renderTxList(getSGDData())">
+        <option value="">All categories</option>
+      </select>
+      <select class="filter-sel" id="f-sort" onchange="renderTxList(getSGDData())">
+        <option value="date-desc">Date ↓</option>
+        <option value="date-asc">Date ↑</option>
+        <option value="amount-desc">Amount ↓</option>
+        <option value="amount-asc">Amount ↑</option>
+      </select>
+    </div>
+    <div class="tx-list" id="tx-list"></div>
+    <div class="add-row" id="tx-add-row">
+      <input class="add-inp" type="number" id="tx-new-amt" placeholder="Amount (in curr)" style="max-width:110px">
+      <select class="add-sel" id="tx-new-cat"></select>
+      <input class="add-inp" type="text" id="tx-new-rmk" placeholder="Remark">
+      <input class="add-inp" type="date" id="tx-new-date" style="max-width:130px">
+      <button class="add-btn" onclick="addTx()">Add</button>
+    </div>
+  </div>
 </div>
-<div class="mo" id="mo" onclick="closeMoBg(event)"><div class="md" id="md"><button class="mc" onclick="closeMo()">✕</button><div id="mb"></div></div></div>
-<div class="ehmo" id="ehmo" onclick="closeEhBg(event)"><div class="ehmd" id="ehmd"><button class="mc" onclick="closeEh()">✕</button><div id="ehmb"></div></div></div>
-<div class="toast" id="toast"></div>
+
+<button class="fab" onclick="openSheet()">+</button>
+<div class="backdrop" id="backdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Log entry</div>
+  <div class="type-row">
+    <button class="type-btn exp" id="btn-exp" onclick="setType('expense')">Expense</button>
+    <button class="type-btn" id="btn-inc" onclick="setType('income')">Income</button>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Currency</label>
+    <select class="form-select" id="f-curr" onchange="updateSheetCatList()"><option value="SGD">SGD</option><option value="HKD">HKD</option></select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Amount (in selected currency)</label>
+    <input class="form-input" type="number" inputmode="decimal" id="f-amt" placeholder="0.00">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Category</label>
+    <select class="form-select" id="f-cat"></select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Remarks</label>
+    <input class="form-input" type="text" id="f-rmk" placeholder="e.g. sushiro">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Date</label>
+    <input class="form-input" type="date" id="f-date">
+  </div>
+  <button class="submit-btn" onclick="submitEntry()">Log entry</button>
+</div>
+
 <script>
-let DOA=[]; let DOA_TREE={};
-let IDX={};
-function buildIndex(){
-  IDX={};
-  for(const r of getDOA()){ ((((IDX[r.sc]??={})[r.a]??={})[r.c]??={})[r.s]??=[]).push(r); }
-}
-function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-let _dataReady=(async function(){
-  const [tree,cons]=await Promise.all([
-    fetch('./doa.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('doa.json HTTP '+r.status);return r.json();}),
-    fetch('./cons.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('cons.json HTTP '+r.status);return r.json();})
-  ]);
-  DOA_TREE=tree;
-  const flat=[];
-  for(const sc in tree)for(const a in tree[sc])for(const c in tree[sc][a])for(const s in tree[sc][a][c])
-    for(const o of tree[sc][a][c][s]) flat.push({sc,a,c,s,lv:o.lv,r:o.r,t:o.t});
-  DOA=flat; CONS=cons; buildIndex();
-})();
+// ── CONSTANTS ─────────────────────────────────────────────────
+const SGD_TO_HKD = 6.1;
 
-// ── CONTACTS ──
-let CONS=[];
-
-// ── HELPERS ──
-const isInf=t=>['Inform','Scope Inform','Inform & Consult','Scope Inform & Consult'].includes(t);
-const isApv=t=>!isInf(t);
-function getMref(r){if(r.mref)return r.mref;const ini=(r.sb||'?').trim().split(/\s+/).map(x=>x[0]).join('').substring(0,3).toUpperCase()||'X';return 'DOA-'+ini+'-'+String(r.id||'').replace(/\D/g,'').slice(-3);}
-let me=JSON.parse(localStorage.getItem('doa_me')||'null');
-let reqs=JSON.parse(localStorage.getItem('doa_reqs')||'[]');
-let mf={s:'',a:'',t:''};let rf={s:'',st:''};let _mtxOpen={};let _mtxData={};
-// ── PAGINATION STATE ──
-const MTX_PAGE_SIZE=50;
-let _mtxPage=0; // current page index (0-based)
-let _mtxAllRows=[]; // all built row HTML strings in grouped mode
-
-function ini(n){return(n||'?').split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase()}
-function now(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
-function save(){try{localStorage.setItem('doa_reqs',JSON.stringify(reqs))}catch(e){alert('Could not save: browser storage is full. Export your requests to PDF, then use "Clear all my data" to free space.');}}
-// ── INDEXEDDB FILE STORE ──
-let _idb=null;
-function idbOpen(){return new Promise((res,rej)=>{if(_idb)return res(_idb);const rq=indexedDB.open('doa_files',1);rq.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('files'))db.createObjectStore('files');};rq.onsuccess=e=>{_idb=e.target.result;res(_idb);};rq.onerror=e=>rej(e);});}
-async function idbPut(id,blob){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(blob,id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);});}
-async function idbGet(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readonly');const rq=tx.objectStore('files').get(id);rq.onsuccess=()=>res(rq.result||null);rq.onerror=e=>rej(e);});}
-async function idbDel(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);});}
-async function getFileBlob(f){let b=null;try{b=await idbGet(f.id);}catch(e){}if(!b&&f.data){try{b=await(await fetch(f.data)).blob();}catch(e){}}return b;}
-async function migrateFilesToIDB(){let changed=false;for(const r of reqs){for(const a of(r.apvs||[])){for(const f of(a.files||[])){if(f.data){try{const blob=await(await fetch(f.data)).blob();await idbPut(f.id,blob);f.size=blob.size;delete f.data;changed=true;}catch(e){}}}}}if(changed)save();}
-// ── ZIP BUILDER ──
-const _crcTable=(()=>{let c,t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
-function _crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=_crcTable[(c^u8[i])&0xFF]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
-function makeZip(entries){const enc=new TextEncoder();const parts=[];const central=[];let offset=0;const dosT=0,dosD=0x21;
-  entries.forEach(e=>{const nb=enc.encode(e.name);const crc=_crc32(e.u8);const sz=e.u8.length;
-    const lh=new Uint8Array(30+nb.length);const dv=new DataView(lh.buffer);
-    dv.setUint32(0,0x04034b50,true);dv.setUint16(4,20,true);dv.setUint16(6,0,true);dv.setUint16(8,0,true);dv.setUint16(10,dosT,true);dv.setUint16(12,dosD,true);dv.setUint32(14,crc,true);dv.setUint32(18,sz,true);dv.setUint32(22,sz,true);dv.setUint16(26,nb.length,true);dv.setUint16(28,0,true);lh.set(nb,30);
-    parts.push(lh,e.u8);
-    const cd=new Uint8Array(46+nb.length);const cv=new DataView(cd.buffer);
-    cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0,true);cv.setUint16(10,0,true);cv.setUint16(12,dosT,true);cv.setUint16(14,dosD,true);cv.setUint32(16,crc,true);cv.setUint32(20,sz,true);cv.setUint32(24,sz,true);cv.setUint16(28,nb.length,true);cv.setUint16(30,0,true);cv.setUint16(32,0,true);cv.setUint16(34,0,true);cv.setUint16(36,0,true);cv.setUint32(38,0,true);cv.setUint32(42,offset,true);cd.set(nb,46);
-    central.push(cd);offset+=lh.length+e.u8.length;});
-  const cSize=central.reduce((s,c)=>s+c.length,0),cOff=offset;
-  const eocd=new Uint8Array(22);const ev=new DataView(eocd.buffer);
-  ev.setUint32(0,0x06054b50,true);ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);ev.setUint32(12,cSize,true);ev.setUint32(16,cOff,true);
-  return new Blob([...parts,...central,eocd],{type:'application/zip'});}
-function _safeName(s){return(s||'').replace(/[^a-z0-9._-]+/gi,'-').replace(/^-+|-+$/g,'');}
-function buildSummaryText(r){const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
-  let s=`DOA REQUEST — ${getMref(r)}\r\n${r.sub}\r\n`;
-  s+=`Scope: ${r.scope||'Group'} | Area: ${r.area} / ${r.cat}\r\n`;
-  s+=`Submitted: ${r.dt} by ${r.sb} | Country: ${r.co||'Group'} | Status: ${r.status}\r\n`;
-  s+=`\r\nPURPOSE:\r\n${r.purpose||'-'}\r\n`;
-  s+=`\r\nDECISIONS SO FAR:\r\n`;
-  r.apvs.filter(x=>isApv(x.t)).forEach(a=>{s+=`- [${lvN[a.lv]||'L'+a.lv}] ${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''}: ${a.st}${a.cm?` — ${a.cm}`:''}${a.at?` (${a.at})`:''}\r\n`;});
-  let anyF=false;let fl='\r\nUPLOADED FILES INCLUDED IN THIS PACK:\r\n';
-  r.apvs.forEach(a=>(a.files||[]).forEach(f=>{anyF=true;fl+=`- ${f.name} (L${a.lv} — ${a.r})\r\n`;}));
-  s+=anyF?fl:'\r\nUPLOADED FILES: none\r\n';
-  s+=`\r\nGenerated ${now()} from DOA Tracker.\r\n`;
-  return s;}
-function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=name;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
-function showCenter(msg){let el=document.getElementById('centerMsg');if(!el){el=document.createElement('div');el.id='centerMsg';el.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:600;pointer-events:none';document.body.appendChild(el);}el.innerHTML=`<div style="background:var(--ac);color:#fff;padding:18px 26px;border-radius:12px;font-size:15px;font-weight:500;box-shadow:0 10px 40px rgba(0,0,0,.35);max-width:78%;text-align:center;line-height:1.4">${msg}</div>`;el.style.display='flex';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},4000);}
-async function buildAndDownloadPack(r){
-  const list=[];(r.apvs||[]).forEach(x=>(x.files||[]).forEach(f=>list.push({lv:x.lv,role:x.r,f})));
-  const fileEntries=[];
-  for(const it of list){const blob=await getFileBlob(it.f);if(!blob)continue;const u8=new Uint8Array(await blob.arrayBuffer());fileEntries.push({name:`L${it.lv}_${_safeName(it.role)}/${_safeName(it.f.name)}`,u8});}
-  const summaryBytes=new TextEncoder().encode(buildSummaryText(r));
-  const hadFiles=fileEntries.length>0;
-  if(hadFiles){
-    const zip=makeZip([{name:'00_decisions_summary.txt',u8:summaryBytes},...fileEntries]);
-    downloadBlob(zip,`${getMref(r)}_pack.zip`);
-  }else{
-    downloadBlob(new Blob([summaryBytes],{type:'text/plain'}),`${getMref(r)}_summary.txt`);
-  }
-  return hadFiles;}
-function tc(t){if(t==='Approval')return 'bb';if(t==='Scope Approval')return 'bp';if(t==='Inform'||t==='Scope Inform')return 'bgr';return 'bw'}
-function getCon(role,country){const allC=getCONS();if(country){const c=allC.find(x=>x.r===role&&x.co===country);if(c)return c}return allC.find(x=>x.r===role)||{n:role,e:'unknown@benline.com'}}
-function getActiveLv(req){
-  const lvs=[...new Set(req.apvs.filter(a=>isApv(a.t)).map(a=>a.lv))].sort((a,b)=>b-a);
-  for(const lv of lvs){const at=req.apvs.filter(a=>a.lv===lv&&isApv(a.t));if(!at.every(a=>a.st==='Approved'||a.st==='Rejected'||a.st==='N.A'))return lv}
-  return null
-}
-function doLogin(){
-  const n=document.getElementById('ln').value.trim(),e=document.getElementById('le').value.trim(),co=document.getElementById('lc2').value;
-  if(!n||!e){alert('Please enter your name and email');return}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){alert('Please enter a valid email address (e.g. name@company.com)');return}
-  me={n,e,co};localStorage.setItem('doa_me',JSON.stringify(me));_dataReady.then(()=>initApp()).catch(e=>alert('Failed to load DOA data ('+e.message+'). Please refresh.'));
-}
-function initApp(){
-  document.getElementById('lov').style.display='none';
-  document.getElementById('app').style.display='flex';
-  document.getElementById('suname').textContent=me.n;
-  document.getElementById('suemail').textContent=me.e;
-  document.getElementById('greet').textContent='Good day, '+me.n.split(' ')[0];
-  document.getElementById('req-as-name').textContent=me.n;
-  document.getElementById('req-as-email').textContent=me.e;
-  document.getElementById('req-as-country').textContent=me.co||'No country set';
-  renderAll();
-}
-window.onload=()=>{_dataReady.then(()=>{if(me)initApp();}).catch(e=>{alert('Failed to load DOA data ('+e.message+'). Make sure doa.json and cons.json are in the same folder and the page is served over http (GitHub Pages), not opened as a local file.');});};
-function go(id,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  if(el)el.classList.add('active');
-  if(id==='matrix')renderMatrix();
+// ── EMOJI MAP ─────────────────────────────────────────────────
+// Default emojis for known category names (case-insensitive match)
+const EMOJI_MAP = {
+  'living':'🏠','rent':'🏠','housing':'🏠',
+  'loans':'💳','loan':'💳','debt':'💳',
+  'eat out':'🍜','food':'🍜','dining':'🍜','restaurant':'🍜',
+  'leisure':'🎮','entertainment':'🎮','fun':'🎮',
+  'transport':'🚇','transportation':'🚇','mrt':'🚇','bus':'🚇','taxi':'🚇',
+  'grocery':'🛒','groceries':'🛒','supermarket':'🛒',
+  'consumption':'🛍️','shopping':'🛍️','clothes':'🛍️',
+  'health':'💊','medical':'💊','gym':'🏋️',
+  'travel':'✈️','holiday':'✈️',
+  'savings':'💰','investment':'📈',
+  'utilities':'💡','bills':'💡',
+  'education':'📚','school':'📚',
+};
+function getEmoji(name, customEmoji) {
+  if (customEmoji) return customEmoji;
+  const key = (name||'').toLowerCase().trim();
+  return EMOJI_MAP[key] || '📦';
 }
 
-// ── DROPDOWN CASCADE ──
-function onScope(){
-  const scope=document.getElementById('sscope').value;
-  const s=document.getElementById('sarea');
-  s.innerHTML='<option value="">Select functional area</option>';
-  s.disabled=!scope;
-  document.getElementById('scat').innerHTML='<option value="">— select area first —</option>';
-  document.getElementById('scat').disabled=true;
-  document.getElementById('ssub').innerHTML='<option value="">— select category first —</option>';
-  document.getElementById('ssub').disabled=true;
-  document.getElementById('amap').style.display='none';
-  if(!scope)return;
-  const areas=Object.keys(IDX[scope]||{}).sort();
-  areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;s.appendChild(o)});
+// ── DEFAULT DATA (SGD base, used only on first load) ──────────
+// All monetary values stored in SGD. HKD = SGD * 6.1
+const DEFAULT_DATA = {
+  budgetSGD: 4178,
+  incomeSGD: 4662.27,
+  savingsBalanceSGD: 4662,
+  savings: {
+    monthTargetSGD: 800, monthActualSGD: 400,
+    yearTargetSGD: 8000, yearActualSGD: 2600
+  },
+  categories: [
+    {name:'Eat out',  emoji:'🍜', budgetSGD:300,  color:'#3a5c8a'},
+    {name:'Grocery',  emoji:'🛒', budgetSGD:400,  color:'#7c5c38'},
+    {name:'Leisure',  emoji:'🎮', budgetSGD:100,  color:'#6b5090'},
+    {name:'Living',   emoji:'🏠', budgetSGD:1450, color:'#3a7d5e'},
+    {name:'Loans',    emoji:'💳', budgetSGD:528,  color:'#b84040'},
+    {name:'Consumption',emoji:'🛍️',budgetSGD:50,  color:'#a04060'},
+    {name:'Transport',emoji:'🚇', budgetSGD:80,   color:'#c07820'},
+  ],
+  // txs stored with amountSGD; date as MM/DD string; type expense|income
+  txs: [
+    {date:'06/03',amountSGD:12.8,  category:'Eat out',    remark:'lunch',         type:'expense'},
+    {date:'06/02',amountSGD:89,    category:'Leisure',    remark:'hle clothesx2', type:'expense'},
+    {date:'06/02',amountSGD:7.6,   category:'Consumption',remark:'food scale',    type:'expense'},
+    {date:'06/02',amountSGD:104.8, category:'Grocery',    remark:'donki',         type:'expense'},
+    {date:'06/15',amountSGD:1400,  category:'Living',     remark:'rent',          type:'expense'},
+    {date:'06/02',amountSGD:528,   category:'Loans',      remark:'just need',     type:'expense'},
+    {date:'06/02',amountSGD:80,    category:'Transport',  remark:'just need',     type:'expense'},
+    {date:'06/02',amountSGD:10.7,  category:'Eat out',    remark:'donki',         type:'expense'},
+    {date:'06/01',amountSGD:30.7,  category:'Eat out',    remark:'sushiro',       type:'expense'},
+  ]
+};
+
+// ── LOCALSTORAGE ──────────────────────────────────────────────
+const LS_KEY = 'finance_v3';
+function saveData() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(STATE)); } catch(e){}
 }
-function onArea(){
-  const scope=document.getElementById('sscope').value;
-  const area=document.getElementById('sarea').value;
-  const cs=document.getElementById('scat');
-  cs.innerHTML='<option value="">Select category</option>';cs.disabled=!area;
-  document.getElementById('ssub').innerHTML='<option value="">Select sub-category</option>';document.getElementById('ssub').disabled=true;
-  document.getElementById('amap').style.display='none';
-  if(!area)return;
-  const cats=Object.keys((IDX[scope]||{})[area]||{}).sort();
-  cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;cs.appendChild(o)});
-}
-function onCat(){
-  const scope=document.getElementById('sscope').value;
-  const area=document.getElementById('sarea').value,cat=document.getElementById('scat').value;
-  const ss=document.getElementById('ssub');
-  ss.innerHTML='<option value="">Select sub-category / action</option>';ss.disabled=!cat;
-  document.getElementById('amap').style.display='none';
-  if(!cat)return;
-  const subs=Object.keys(((IDX[scope]||{})[area]||{})[cat]||{}).sort();
-  subs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o)});
-}
-function onSub(){
-  const scope=document.getElementById('sscope').value;
-  const area=document.getElementById('sarea').value,cat=document.getElementById('scat').value,sub=document.getElementById('ssub').value;
-  const md=document.getElementById('amap');if(!sub){md.style.display='none';return}
-  const rules=((((IDX[scope]||{})[area]||{})[cat]||{})[sub])||[];if(!rules.length){md.style.display='none';return}
-  md.style.display='block';
-  const byLv={};rules.forEach(r=>{byLv[r.lv]=byLv[r.lv]||[];byLv[r.lv].push(r)});
-  const lvN={1:'Level 1 — Board',2:'Level 2 — Executive',3:'Level 3 — Product (MAS/Liner/Logistics)',4:'Level 4 — Functions',5:'Level 5 — Country'};
-  let html='';
-  Object.keys(byLv).sort((a,b)=>b-a).forEach(lv=>{
-    const rows=byLv[lv];
-    html+=`<div class="lg"><div class="ll"><span class="badge bgr" style="font-size:9px">L${lv}</span>${lvN[lv]||'Level '+lv}</div>`;
-    rows.forEach(r=>{
-      const co=getCon(r.r,me?.co||'');
-      html+=`<div class="ar"><div><div style="font-size:11px;font-weight:500">${r.r}${co.n&&co.n!==r.r?` <span style="color:var(--tx3);font-weight:400;font-size:10px">(${co.n})</span>`:''}</div><div style="font-size:12px;color:var(--tx3)">${co.e||''}</div></div><span class="badge ${tc(r.t)}">${r.t}</span></div>`;
-    });
-    html+='</div>';
-  });
-  document.getElementById('alvls').innerHTML=html;
+function loadData() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  return null;
 }
 
-function submitReq(){
-  const n=me.n,e=me.e,co=me.co||'';
-  const scope=document.getElementById('sscope').value;
-  const area=document.getElementById('sarea').value,cat=document.getElementById('scat').value,sub=document.getElementById('ssub').value;
-  const purpose=document.getElementById('rpurpose').value.trim();
-  const titleRaw=document.getElementById('rtitle').value.trim();
-  if(!scope||!area||!cat||!sub){showT('Please complete all selections');return}
-  if(!purpose){showT('Please add a purpose / justification');return}
-  const title=titleRaw||sub;
-  const rules=((((IDX[scope]||{})[area]||{})[cat]||{})[sub])||[];
-  const apvs=rules.map(r=>{const c=getCon(r.r,co);return{lv:r.lv,r:r.r,t:r.t,n:c.n,re:c.e,st:'Pending',sent:false,at:null,cm:''}});
-  const _ts=Date.now();
-  const _initials=(n||'?').trim().split(/\s+/).map(x=>x[0]).join('').substring(0,3).toUpperCase()||'X';
-  let _seq=parseInt(localStorage.getItem('doa_seq')||'0')+1;
-  localStorage.setItem('doa_seq',String(_seq));
-  const _mref='DOA-'+_initials+'-'+String(_seq).padStart(3,'0');
-  const req={id:'R'+_ts,mref:_mref,sub:title,sb:n,se:e,co,scope,area,cat,action:sub,purpose,apvs,status:'In Progress',dt:now(),notes:[]};
-  reqs.unshift(req);save();clearForm();renderAll();
-  showT('Request submitted successfully');
-  go('dashboard',document.querySelectorAll('.ni')[0]);
-  setTimeout(()=>openModal(req.id),200);
+// ── STATE (single SGD-based source of truth) ──────────────────
+let STATE = loadData() || JSON.parse(JSON.stringify(DEFAULT_DATA));
+// ensure categories always sorted ABC
+function sortCats() {
+  STATE.categories.sort((a,b) => a.name.localeCompare(b.name));
 }
-function clearForm(){
-  document.getElementById('rtitle').value='';
-  document.getElementById('sscope').value='';
-  document.getElementById('sarea').innerHTML='<option value="">— select scope first —</option>';
-  document.getElementById('sarea').disabled=true;
-  document.getElementById('scat').innerHTML='<option value="">— select area first —</option>';document.getElementById('scat').disabled=true;
-  document.getElementById('ssub').innerHTML='<option value="">— select category first —</option>';document.getElementById('ssub').disabled=true;
-  document.getElementById('rpurpose').value='';document.getElementById('amap').style.display='none';
-}
-function renderAll(){renderDash();renderMatrix();renderCons();updateBadges()}
-function updateBadges(){
-  const op=reqs.filter(r=>r.status==='In Progress').length;
-  const bo=document.getElementById('bopen');bo.textContent=op;bo.style.display=op?'inline-block':'none';
-}
-function renderDash(){
-  const op=reqs.filter(r=>r.sb===me?.n&&r.status==='In Progress').length;
-  const pe=reqs.reduce((n,r)=>n+r.apvs.filter(a=>a.st==='Pending'&&isApv(a.t)).length,0);
-  const dn=reqs.filter(r=>r.status==='Approved').length;
-  document.getElementById('st1').textContent=op;document.getElementById('st2').textContent=pe;
-  document.getElementById('st4').textContent=dn;
-  const el=document.getElementById('dash-list');if(!el)return;
-  let rs=reqs.filter(r=>r.sb===me?.n||r.se===me?.e);
-  if(rf.s)rs=rs.filter(r=>(r.sub+r.area+r.id).toLowerCase().includes(rf.s.toLowerCase()));
-  if(rf.st)rs=rs.filter(r=>r.status===rf.st);
-  if(!reqs.length){el.innerHTML='<div class="es">No requests yet. Click <strong>New Request</strong> to start.</div>';return}
-  el.innerHTML=rs.length?rs.map(r=>rrow(r)).join(''):'<div class="es">No requests match your filter.</div>';
-}
-function rrow(r){
-  const apvs=r.apvs.filter(a=>isApv(a.t));
-  const naApvs=apvs.filter(a=>a.st==='N.A');
-  const activeApvs=apvs.filter(a=>a.st!=='N.A');
-  const dn=activeApvs.filter(a=>a.st==='Approved').length;
-  const total=activeApvs.length;
-  const isRej=r.status==='Rejected'||apvs.some(a=>a.st==='Rejected');
-  const pct=total?Math.round(dn/total*100):0;
-  const alv=getActiveLv(r);
-  const bc=r.status==='Approved'?'bg':r.status==='Rejected'?'br':'bw';
-  const barColor=r.status==='Rejected'?'#c0392b':r.status==='Approved'?'var(--gr)':'var(--gr)';
-  const rejNote=isRej?`<div style="font-size:10px;color:var(--rd);margin-top:3px;font-weight:500">Rejected — process stopped</div>`:'';
-  if(exportMode){
-    const checked=exportSelected.has(r.id);
-    return `<div class="rrow" onclick="toggleExportSelect('${r.id}')" style="cursor:pointer;${checked?'border-color:var(--ac);background:var(--acl)':''}">
-      <div class="rt"><input type="checkbox" id="export-cb-${r.id}" ${checked?'checked':''} onclick="event.stopPropagation();toggleExportSelect('${r.id}')" style="margin-right:8px;cursor:pointer;flex-shrink:0"><span class="rtitle">${r.sub}</span><span class="badge ${bc}">${r.status}</span>${alv?`<span class="badge bgr" style="font-size:9px">Active L${alv}</span>`:''}</div>
-      <div class="rm">${getMref(r)} · ${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · ${r.dt} · ${r.sb}</div>
-      <div class="pb"><div class="pf" style="width:${pct}%;background:${barColor}"></div></div>
-    </div>`;
-  }
-  return `<div class="rrow" onclick="openModal('${r.id}')">
-    <div class="rt"><span class="rtitle">${r.sub}</span><span class="badge ${bc}">${r.status}</span>${alv?`<span class="badge bgr" style="font-size:9px">Active L${alv}</span>`:''}</div>
-    <div class="rm">${getMref(r)} · ${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · ${r.dt} · ${r.sb}</div>
-    <div class="pb"><div class="pf" style="width:${pct}%;background:${barColor}"></div></div>
-    ${rejNote}
-    ${!isRej?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${dn}/${total} approvals · ${activeApvs.filter(a=>a.st==='Pending').length} pending${naApvs.length?` · ${naApvs.length} N.A (skipped)`:''}</div>`:''}
-  </div>`;
-}
-function renderReqs(){renderDash();}
+sortCats();
 
-// ── OPEN MODAL ──
-function openModal(id){
-  const r=reqs.find(x=>x.id===id);if(!r)return;
-  const alv=getActiveLv(r);
-  const byLv={};r.apvs.forEach(a=>{byLv[a.lv]=byLv[a.lv]||[];byLv[a.lv].push(a)});
-  const lvN={1:'Board',2:'Executive',3:'Product',4:'Functions',5:'Country'};
-  const apvLvs=[...new Set(r.apvs.filter(a=>isApv(a.t)).map(a=>a.lv))].sort((a,b)=>b-a);
-  const seqH=apvLvs.map((lv,i)=>{
-    const at=r.apvs.filter(a=>a.lv===lv&&isApv(a.t));
-    const dn=at.every(a=>a.st==='Approved'),rj=at.some(a=>a.st==='Rejected'),na=at.some(a=>a.st==='N.A')&&!at.some(a=>a.st==='Rejected');
-    return `${i>0?'<span class="sa">→</span>':''}<span class="ss ${rj?'rej':na?'rej':dn?'don':lv===alv?'act':''}">L${lv} ${rj?'✗':na?'N.A':dn?'✓':lv===alv?'▶':'⏳'}</span>`;
+let curr = 'SGD';
+let entryType = 'expense';
+let donutChart = null;
+let txOpen = false;
+let catEditMode = false;
+let ovEditOpen = false;
+let savEditOpen = false;
+
+// ── CONVERSION HELPERS ────────────────────────────────────────
+function toDisp(sgdVal) {
+  return curr === 'SGD' ? sgdVal : sgdVal * SGD_TO_HKD;
+}
+function toSGD(val) {
+  return curr === 'SGD' ? val : val / SGD_TO_HKD;
+}
+const fmt  = n => Number(n).toLocaleString('en',{maximumFractionDigits:0});
+const fmtD = n => Number(n).toLocaleString('en',{minimumFractionDigits:1,maximumFractionDigits:1});
+
+function usedColor(pct) {
+  if (pct >= 90) return '#b84040';
+  if (pct >= 70) return '#c07820';
+  return '#7c5c38';
+}
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isErr ? 'var(--red)' : 'var(--green)';
+  t.style.color = isErr ? 'var(--red)' : 'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Returns display-currency values for a category
+function catSpentSGD(cat) {
+  return STATE.txs.filter(t => t.type==='expense' && t.category===cat.name)
+                  .reduce((s,t) => s + t.amountSGD, 0);
+}
+
+// getSGDData — returns STATE (used as arg for render fns, keeps interface clean)
+function getSGDData() { return STATE; }
+
+// ── CORE RENDER ───────────────────────────────────────────────
+function render() {
+  sortCats();
+  const totalSpentSGD = STATE.categories.reduce((s,c) => s + catSpentSGD(c), 0);
+  const totalSpent = toDisp(totalSpentSGD);
+  const budget = toDisp(STATE.budgetSGD);
+  const remaining = budget - totalSpent;
+  const usedPct = budget > 0 ? (totalSpent / budget * 100) : 0;
+
+  // Remaining = budget - used
+  const remEl = document.getElementById('ov-remaining');
+  remEl.textContent = fmtD(remaining);
+  remEl.className = 'ov-val ' + (remaining < 0 ? 'red' : remaining < budget * 0.15 ? 'amber' : 'green');
+  document.getElementById('ov-curr-sub').textContent = curr + ' · budget − used';
+
+  // Savings balance
+  document.getElementById('ov-savings-disp').textContent = fmt(toDisp(STATE.savingsBalanceSGD));
+  document.getElementById('ov-savings-sub').textContent = curr + ' savings balance';
+
+  const bar = document.getElementById('ov-bar');
+  bar.style.width = Math.min(Math.max(usedPct, 0), 100) + '%';
+  bar.style.background = usedColor(usedPct);
+  document.getElementById('ov-pct').textContent = usedPct.toFixed(1) + '% used · ' + curr + ' ' + fmtD(totalSpent) + ' spent';
+
+  renderDonut(totalSpent);
+  renderSavings();
+  renderCats(totalSpentSGD);
+  if (txOpen) renderTxList(STATE);
+  refreshFilterCatSel();
+  updateSheetCatList();
+  saveData();
+}
+
+// ── DONUT ─────────────────────────────────────────────────────
+function renderDonut(totalSpent) {
+  const cats = STATE.categories;
+  document.getElementById('donut-leg').innerHTML = cats.map(c => {
+    const sp = toDisp(catSpentSGD(c));
+    const pct = totalSpent > 0 ? (sp/totalSpent*100).toFixed(0) : 0;
+    return `<div class="leg-item"><div class="leg-dot" style="background:${c.color}"></div>${c.emoji||'📦'} ${c.name} ${pct}%</div>`;
   }).join('');
-  let lvH='';
-  Object.keys(byLv).sort((a,b)=>b-a).forEach(lv=>{
-    const rows=byLv[lv],lvN2=parseInt(lv);
-    const apR=rows.filter(a=>isApv(a.t)),inR=rows.filter(a=>isInf(a.t));
-    const isLk=apvLvs.includes(lvN2)&&alv!==null&&lvN2<alv;
-    const isAct=apR.length>0&&(r.status==='In Progress'||r.status==='Rejected'||r.status==='N.A')&&!isLk;
-    const lvDn=apR.length&&apR.every(a=>a.st==='Approved'||a.st==='Rejected'||a.st==='N.A');
-    const lvRj=apR.some(a=>a.st==='Rejected'||a.st==='N.A');
-    if(apR.length){
-      lvH+=`<div class="ml"><div class="mlh"><span class="badge ${lvRj?'br':lvDn?'bg':isAct?'bw':'bgr'}" style="font-size:11px">L${lv}</span>${lvN[lv]||'L'+lv}${isLk?` <span style="font-size:11px;color:var(--tx3)">Locked — Level ${lvN2+1} must complete first</span>`:''}${isAct&&!lvDn?' <span style="font-size:11px;color:var(--am)">Active — send emails now</span>':''}</div>`;
-      apR.forEach(a=>{
-        const sc=a.st==='Approved'?'bg':a.st==='Rejected'?'br':a.st==='N.A'?'bp':a.st==='Blocked'?'bgr':a.st==='Email Sent'?'bt':'bgr';
-        const fileCount=(a.files||[]).length;
-        const rowUnresolved=(a.st==='Pending'||a.st==='Email Sent'||a.st==='Blocked');
-        const locked=rowUnresolved&&(isLk||a.st==='Blocked');
-        const isScopeApv=/scope/i.test(a.t);
-        const attachBtn=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${a.r}','${a.lv}')">Upload${fileCount?` (${fileCount})`:''}</button>`;
-        const sendBtn=(!locked&&a.st==='Pending'&&r.status!=='Rejected')?`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Send</button>`:'';
-        const remindBtn=(!locked&&a.st==='Email Sent'&&r.status!=='Rejected')?`<button class="btn" style="padding:5px 11px;font-size:12px;border-color:#7a4f00;color:var(--am)" onclick="sendReminder('${id}','${a.r}','${a.lv}')">Remind</button>`:'';
-        const canRespond=!locked&&(a.st==='Email Sent'||a.sent||a.st==='Approved'||a.st==='Rejected');
-        const approveBtn=canRespond?`<button class="btn btn-ok btn-sm ${a.st==='Approved'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Approved')" style="padding:5px 12px;font-size:12px">${a.st==='Approved'?'Approved':'Approve'}</button>`:'';
-        const rejectBtn=canRespond?`<button class="btn btn-no btn-sm ${a.st==='Rejected'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','Rejected')" style="padding:5px 12px;font-size:12px">${a.st==='Rejected'?'Rejected':'Reject'}</button>`:'';
-        const naBtn=(isScopeApv||a.st==='N.A')?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
-        const lockedHint=locked?`<span style="font-size:11px;color:var(--tx3);margin-left:6px">Locked${isScopeApv?' — or mark N.A to skip':''}</span>`:'';
-        const typeBadge=`<span class="badge ${tc(a.t)}" style="font-size:10px;margin-top:2px;display:inline-block">${a.t} · ${isScopeApv?'optional':'required'}</span>`;
-        lvH+=`<div class="ma"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}</div>${typeBadge}<div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid var(--bdr2)">${a.cm}</div>`:''}</div><div class="maa"><span class="badge ${sc}">${locked?'Pending':a.st}</span>${sendBtn} ${remindBtn}${attachBtn}${approveBtn} ${rejectBtn} ${naBtn}${lockedHint}</div></div>`;
-      });
-      lvH+='</div>';
-    }
-    // INFORM/CONSULT rows — now unified card style matching approval rows
-    const infGroups={};
-    inR.forEach(a=>{(infGroups[a.t]=infGroups[a.t]||[]).push(a);});
-    Object.keys(infGroups).forEach(type=>{
-      const grp=infGroups[type];const isScopeInf=/scope/i.test(type);
-      // Section header for inform level (only if no approval rows shown for this level already)
-      if(!apR.length){
-        lvH+=`<div class="ml"><div class="mlh"><span class="badge bgr" style="font-size:11px">L${lv}</span>${lvN[lv]||'L'+lv}</div>`;
+
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(document.getElementById('donutChart'), {
+    type:'doughnut',
+    data:{
+      labels: cats.map(c=>c.name),
+      datasets:[{
+        data: cats.map(c => toDisp(catSpentSGD(c))),
+        backgroundColor: cats.map(c=>c.color),
+        borderWidth:3, borderColor:'#faf7f2', hoverBorderColor:'#faf7f2'
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'68%',
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const sp=ctx.raw; const pct=totalSpent>0?(sp/totalSpent*100).toFixed(1):0;
+          return ` ${ctx.label}: ${curr} ${fmtD(sp)} (${pct}%)`;
+        }}}
       }
-      grp.forEach(a=>{
-        const canNotify=r.status!=='Rejected'&&a.st==='Pending';
-        const fileCount=(a.files||[]).length;
-        const attachBtn=`<button class="btn" style="padding:5px 10px;font-size:12px;color:var(--tl);border-color:var(--tl)" onclick="openUpload('${id}','${a.r}','${a.lv}')">Upload${fileCount?` (${fileCount})`:''}</button>`;
-        let notifyBtn='';
-        if(a.st==='N.A'){notifyBtn='';}
-        else if(canNotify){notifyBtn=`<button class="btn btn-em" onclick="sendOne('${id}','${a.r}','${a.lv}')">Notify</button>`;}
-        else if(a.st==='Pending'){notifyBtn=`<span style="color:var(--tx3);font-size:12px">Locked</span>`;}
-        else{notifyBtn='<span style="color:var(--gr);font-size:12px;font-weight:500">✓ Notified</span>';}
-        const naBtn=isScopeInf?`<button class="btn btn-sm ${a.st==='N.A'?'selected':''}" onclick="decide('${id}','${a.r}','${a.lv}','N.A')" style="padding:5px 12px;font-size:12px;border-color:#4a1a7a;color:#4a1a7a;${a.st==='N.A'?'background:#f0e8fa;border-width:1.5px;font-weight:600':''}">${a.st==='N.A'?'N.A ✓':'N.A'}</button>`:'';
-        const typeBadge=`<span class="badge bw" style="font-size:10px;margin-top:2px;display:inline-block">${type} · ${isScopeInf?'optional':'required'}</span>`;
-        const stBadge=a.st==='N.A'?`<span class="badge bp">N.A</span>`:a.st==='Email Sent'?`<span class="badge bt">Notified</span>`:`<span class="badge bgr">Pending</span>`;
-        lvH+=`<div class="ma ma-inf"><div class="mal"><div class="man">${a.r}${a.n&&a.n!==a.r?` <span style="color:var(--tx3);font-size:12px;font-weight:400">(${a.n})</span>`:''}</div>${typeBadge}<div class="mae">${a.re}</div>${a.cm?`<div style="font-size:12px;color:var(--tx2);font-style:italic;margin-top:2px;padding:3px 6px;background:var(--sur);border-radius:3px;border-left:2px solid #e8dfc0">${a.cm}</div>`:''}</div><div class="maa">${stBadge}${notifyBtn}${attachBtn}${naBtn}</div></div>`;
-      });
-      if(!apR.length){lvH+='</div>';}
-    });
-  });
-  const thrH=r.notes.map(nt=>`<div class="tm"><div class="tav">${ini(nt.f)}</div><div class="tb ${nt.f===me?.n?'mine':''}"><div class="tw">${nt.f}</div><div class="tt">${nt.x}</div><div class="ti">${nt.at}</div></div></div>`).join('')||'<div style="font-size:11px;color:var(--tx3)">No notes yet.</div>';
-  document.getElementById('mb').innerHTML=`<h3>${r.sub}</h3><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--ac);font-weight:600;margin:2px 0 4px">Ref: ${getMref(r)}</div><div class="mm">${r.scope?r.scope+' | ':''} ${r.area} / ${r.cat} · <strong>${r.status}</strong> · ${r.dt} by ${r.sb}</div><div style="display:flex;gap:6px;margin:10px 0 4px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" style="padding:6px 13px;font-size:12px;border-color:var(--tl);color:var(--tl)" onclick="exportSingleReqPDF('${id}')">Export PDF</button>${(r.sb===me?.n||r.se===me?.e)?`<button class="btn btn-no" style="padding:6px 13px;font-size:12px" onclick="deleteReq('${id}')">Delete request</button>`:''}</div>${r.purpose?`<div style="background:var(--sur2);border-radius:var(--rs);padding:8px 11px;font-size:12px;color:var(--tx2);margin-bottom:12px"><strong>Purpose:</strong> ${r.purpose}</div>`:''}<div style="margin-bottom:12px"><div style="font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Approval sequence — level by level</div><div class="seq">${seqH||'<span class="badge bg">No sequential approvals</span>'}</div></div>${lvH}<div class="thr"><div class="tht">Notes & activity</div>${thrH}<div class="rb"><textarea id="ntxt-${id}" placeholder="Add a note, record a response, log an update..."></textarea><div class="ras"><button class="btn btn-p" style="padding:7px 14px;font-size:13px" onclick="addNote('${id}')">Add note</button><button class="btn" style="padding:7px 13px;font-size:13px" onclick="closeMo()">Close</button></div></div></div>`;
-  document.getElementById('mo').classList.add('open');
-}
-
-async function sendOne(reqId,role,lv){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  const alv=getActiveLv(r);
-  if(r.status==='Rejected'){showT('Cannot send — request has been rejected');return}
-  if(isApv(a.t)&&alv!==null&&a.lv<alv){showT('Locked — Level '+alv+' must be completed first');return}
-  const to=a.re;
-  const refCode=`[REF: ${getMref(r)}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
-  const higherLvFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length).flatMap(x=>(x.files||[]).map(f=>`  • ${f.name} (from L${x.lv} — ${x.r})`));
-  const attachNote=higherLvFiles.length?`\n\nATTACHMENTS FROM PRIOR LEVELS (please attach to this email):\n${higherLvFiles.join('\n')}`:'';
-  const mref=getMref(r);
-  const subj=encodeURIComponent(`[${mref}] [${isInf(a.t)?'NOTIFY':'ACTION REQUIRED'}] ${r.sub} ${refCode}`);
-  function getOpeningPara(t){
-    if(t==='Inform'||t==='Scope Inform')return`This email is to inform you of the following action under the Ben Line Delegation of Authority policy.\n\nThis is for your information only — no action or response is required from you.`;
-    if(t==='Inform & Consult'||t==='Scope Inform & Consult')return`This email is to inform and consult with you on the following action under the Ben Line Delegation of Authority policy.\n\nWhile no formal approval is required, your input and feedback are valued. Please feel free to share any comments or concerns.`;
-    if(t==='Scope Approval'||t==='Approval')return`I am writing to request your formal ${t} for the following action under the Ben Line Delegation of Authority policy.\n\nPlease review the details below and reply with your approval or any questions.`;
-    return`I am writing regarding the following action under the Ben Line Delegation of Authority policy.`;
-  }
-  function getClosingPara(t){
-    if(t==='Inform'||t==='Scope Inform')return`No further action is required from you. This email is for your records.`;
-    if(t==='Inform & Consult'||t==='Scope Inform & Consult')return`Please share any comments or concerns at your earliest convenience. If we do not hear from you, we will proceed with this action.`;
-    return`Please reply to this email with your decision (Approved / Not Approved) and any comments.\n\nTo help us track this request, please keep the reference code in the subject line when replying.`;
-  }
-  const bodyText=`Dear ${a.n||a.r},\n\n${getOpeningPara(a.t)}\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.${attachNote}\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${getClosingPara(a.t)}\n\nThank you,\n${r.sb}`;
-  const body=encodeURIComponent(bodyText);
-  let hadFiles=false;
-  try{hadFiles=await buildAndDownloadPack(r);}catch(e){showT('Could not build attachment pack');}
-  window.location.href=`mailto:${to}?subject=${subj}&body=${body}`;
-  a.sent=true;if(a.st==='Pending')a.st='Email Sent';
-  r.notes.push({f:'System',x:`Email opened for ${a.r} (${a.re})${hadFiles?' + attachment pack downloaded':''} — ${refCode}`,at:now()});
-  save();renderAll();openModal(reqId);
-  showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the Outlook email before sending.':'Summary downloaded.<br>Drag it into the Outlook email before sending.');
-}
-function recomputeStatus(r){
-  const apv=r.apvs.filter(x=>isApv(x.t));
-  if(!apv.length){r.status='Approved';return;}
-  if(apv.some(x=>x.st==='Rejected')){
-    r.status='Rejected';
-    r.apvs.forEach(x=>{if(isApv(x.t)&&(x.st==='Pending'||x.st==='Email Sent'))x.st='Blocked';});
-    return;
-  }
-  r.apvs.forEach(x=>{if(x.st==='Blocked'&&isApv(x.t))x.st=x.sent?'Email Sent':'Pending';});
-  const allResolved=apv.every(x=>x.st==='Approved'||x.st==='N.A');
-  r.status=allResolved?'Approved':'In Progress';
-}
-function decide(reqId,role,lv,dec){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  if(a.st===dec){
-    const cancelReason=dec==='Rejected'||dec==='N.A'?prompt(`Reason for cancelling (optional):`)||'':null;
-    a.st=a.sent?'Email Sent':'Pending';a.cm='';a.at=null;
-    recomputeStatus(r);
-    r.notes.push({f:me?.n||'User',x:`Cancelled ${dec} for ${role}${cancelReason?': '+cancelReason:''}`,at:now()});
-    save();renderAll();openModal(reqId);showT('Decision cancelled — '+role+' restored');return;
-  }
-  const cm=(dec==='Rejected'||dec==='N.A')?prompt(`Reason for ${dec} (required):`)||'N/A':null;
-  const prevStatus=r.status;
-  a.st=dec;a.cm=cm||'';a.at=now();
-  r.notes.push({f:role,x:`${dec}${cm?': '+cm:''}`,at:now()});
-  recomputeStatus(r);
-  const alvN=parseInt(lv),atLv=r.apvs.filter(x=>x.lv===alvN&&isApv(x.t));
-  if(r.status==='Rejected'){
-    r.notes.push({f:'System',x:`Rejected at Level ${alvN} by ${role}. Other approvals blocked.`,at:now()});
-  } else if(atLv.every(x=>x.st==='Approved'||x.st==='N.A')){
-    const nxt=getActiveLv(r);
-    if(nxt===null&&r.status==='Approved'&&prevStatus!=='Approved'){r.notes.push({f:'System',x:'All approvals collected. Request fully approved.',at:now()})}
-    else if(nxt!==null){r.notes.push({f:'System',x:`Level ${alvN} complete. Level ${nxt} now active — send Level ${nxt} emails now.`,at:now()})}
-  }
-  save();renderAll();openModal(reqId);showT(role+' — '+dec);
-}
-function addNote(reqId){
-  const r=reqs.find(x=>x.id===reqId),txt=document.getElementById('ntxt-'+reqId).value.trim();
-  if(!txt)return;r.notes.push({f:me?.n||'User',x:txt,at:now()});save();openModal(reqId);
-}
-function deleteReq(reqId){
-  if(!confirm('Delete this request? This cannot be undone.'))return;
-  reqs=reqs.filter(x=>x.id!==reqId);
-  save();renderAll();closeMo();showT('Request deleted');
-}
-
-// ── RENDER MATRIX with PAGINATION ──
-function renderMatrix(){
-  if(!document.getElementById('page-matrix').classList.contains('active'))return;
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Function',5:'L5 Country'};
-  const head=document.getElementById('mtbl-body').closest('table').querySelector('thead tr');
-  const body=document.getElementById('mtbl-body');
-
-  if(mf.s||mf.a||mf.t){
-    // ── FLAT FILTERED MODE (no pagination needed — filtered sets are small) ──
-    head.innerHTML='<th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th>Level</th><th>Role</th><th>Type</th>';
-    let rows=getDOA();
-    if(mf.s)rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(mf.s.toLowerCase()));
-    if(mf.a)rows=rows.filter(r=>r.a===mf.a);
-    if(mf.t)rows=rows.filter(r=>r.t===mf.t);
-    body.innerHTML=rows.map(r=>`<tr><td><span class="badge bgr" style="font-size:9px">${r.sc||''}</span></td><td><span class="badge bgr" style="font-size:9px">${r.a}</span></td><td style="font-size:11px">${r.c}</td><td style="font-size:11px;max-width:180px">${r.s}</td><td style="font-size:10px;font-weight:500;color:var(--tx2)">${lvN[r.lv]||r.lv}</td><td style="font-size:11px;font-weight:500">${r.r}</td><td><span class="badge ${tc(r.t)}" style="font-size:9px">${r.t}</span></td></tr>`).join('')||'<tr><td colspan="7" class="es">No results.</td></tr>';
-    document.getElementById('pg-bar-top').innerHTML='';
-    document.getElementById('pg-bar-bot').innerHTML='';
-    return;
-  }
-
-  // ── GROUPED MODE with PAGINATION (50 groups per page) ──
-  head.innerHTML='<th>Scope</th><th>Area</th><th>Category</th><th>Sub-category / Action</th><th colspan="3" style="text-align:right;padding-right:12px">Summary</th>';
-  _mtxData={};
-  _mtxOpen={};
-  const allParts=[];let gi=0;
-  for(const sc in IDX)for(const a in IDX[sc])for(const c in IDX[sc][a])for(const s in IDX[sc][a][c]){
-    const rules=IDX[sc][a][c][s];const i=gi++;
-    _mtxData[i]=rules;
-    const types=[...new Set(rules.map(r=>r.t))];
-    const typeSummary=types.slice(0,2).map(t=>`<span class="badge ${tc(t)}" style="font-size:8px;margin-right:3px">${t}</span>`).join('')+(types.length>2?`<span style="font-size:9px;color:var(--tx3)"> +${types.length-2}</span>`:'');
-    allParts.push(`<tr class="rrow" onclick="toggleMtxGroup(${i},this)" style="cursor:pointer"><td><span class="badge bgr" style="font-size:9px">${sc}</span></td><td><span class="badge bgr" style="font-size:9px">${a}</span></td><td style="font-size:11px">${c}</td><td style="font-size:11px;font-weight:500">${s}</td><td colspan="3" style="text-align:right;white-space:nowrap;padding-right:10px"><span style="font-size:10px;color:var(--tx3);margin-right:8px">${rules.length} rule${rules.length!==1?'s':''}</span>${typeSummary}<span class="mtx-chv" style="font-size:15px;color:var(--tx3);margin-left:8px;display:inline-block;transition:transform .15s">&#8250;</span></td></tr>`);
-  }
-  _mtxAllRows=allParts;
-  const totalPages=Math.ceil(_mtxAllRows.length/MTX_PAGE_SIZE);
-  if(_mtxPage>=totalPages)_mtxPage=0;
-  _renderMtxPage(totalPages);
-}
-
-function _renderMtxPage(totalPages){
-  const total=_mtxAllRows.length;
-  if(!totalPages)totalPages=Math.ceil(total/MTX_PAGE_SIZE);
-  const start=_mtxPage*MTX_PAGE_SIZE;
-  const end=Math.min(start+MTX_PAGE_SIZE,total);
-  const pageRows=_mtxAllRows.slice(start,end);
-  document.getElementById('mtbl-body').innerHTML=pageRows.join('')||'<tr><td colspan="7" class="es">No results.</td></tr>';
-  const pgHtml=_buildPgBar(totalPages);
-  document.getElementById('pg-bar-top').innerHTML=pgHtml;
-  document.getElementById('pg-bar-bot').innerHTML=pgHtml;
-}
-
-function _buildPgBar(totalPages){
-  if(totalPages<=1)return'';
-  const cur=_mtxPage;
-  const total=_mtxAllRows.length;
-  const start=cur*MTX_PAGE_SIZE+1;
-  const end=Math.min((cur+1)*MTX_PAGE_SIZE,total);
-  let html=`<button class="pg-btn" onclick="mtxGoPage(0)" ${cur===0?'disabled':''}>«</button>`;
-  html+=`<button class="pg-btn" onclick="mtxGoPage(${cur-1})" ${cur===0?'disabled':''}>‹</button>`;
-  // show window of pages around current
-  const win=2;
-  for(let p=0;p<totalPages;p++){
-    if(p===0||p===totalPages-1||Math.abs(p-cur)<=win){
-      html+=`<button class="pg-btn ${p===cur?'active':''}" onclick="mtxGoPage(${p})">${p+1}</button>`;
-    } else if(Math.abs(p-cur)===win+1){
-      html+=`<span class="pg-info">…</span>`;
-    }
-  }
-  html+=`<button class="pg-btn" onclick="mtxGoPage(${cur+1})" ${cur===totalPages-1?'disabled':''}>›</button>`;
-  html+=`<button class="pg-btn" onclick="mtxGoPage(${totalPages-1})" ${cur===totalPages-1?'disabled':''}>»</button>`;
-  html+=`<span class="pg-info">${start}–${end} of ${total}</span>`;
-  return html;
-}
-
-function mtxGoPage(p){
-  _mtxPage=p;
-  _mtxOpen={};// collapse all expanded rows when changing page
-  const totalPages=Math.ceil(_mtxAllRows.length/MTX_PAGE_SIZE);
-  _renderMtxPage(totalPages);
-  document.getElementById('page-matrix').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function toggleMtxGroup(i,rowEl){
-  const existing=document.querySelectorAll(`tr[data-gi="${i}"]`);
-  if(existing.length){
-    _mtxOpen[i]=!_mtxOpen[i];
-    const show=_mtxOpen[i];
-    existing.forEach(r=>r.style.display=show?'':'none');
-    const chv=rowEl.querySelector('.mtx-chv');
-    if(chv)chv.style.transform=show?'rotate(90deg)':'rotate(0deg)';
-    return;
-  }
-  _mtxOpen[i]=true;
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Function',5:'L5 Country'};
-  const detailHTML=(_mtxData[i]||[]).map(r=>`<tr data-gi="${i}" class="mtx-detail" style="background:var(--sur2)"><td colspan="4" style="padding-left:20px;border-left:2px solid var(--bdr2)"></td><td style="font-size:10px;font-weight:500;color:var(--tx2)">${lvN[r.lv]||r.lv}</td><td style="font-size:11px">${r.r}</td><td><span class="badge ${tc(r.t)}" style="font-size:9px">${r.t}</span></td></tr>`).join('');
-  rowEl.insertAdjacentHTML('afterend',detailHTML);
-  const chv=rowEl.querySelector('.mtx-chv');
-  if(chv)chv.style.transform='rotate(90deg)';
-}
-
-function fMtx(v){mf.s=v;_mtxPage=0;renderMatrix()}
-function fMtxA(v){mf.a=v;_mtxPage=0;renderMatrix()}
-function fMtxT(v){mf.t=v;_mtxPage=0;renderMatrix()}
-
-function renderCons(){
-  const lt={1:'tl1',2:'tl2',3:'tl3',4:'tl4',5:'tl5'};
-  const ll={1:'Level 1 — Board',2:'Level 2 — Executive',3:'Level 3 — Product',4:'Level 4 — Functions',5:'Level 5 — Country'};
-  const byLv={};
-  getCONS().forEach(x=>{byLv[x.lv]=byLv[x.lv]||[];byLv[x.lv].push(x);});
-  let html='';
-  [1,2,3,4,5].forEach(lv=>{
-    if(!byLv[lv])return;
-    html+=`<div style="font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px;padding-bottom:4px;border-bottom:.5px solid var(--bdr)">${ll[lv]}</div>`;
-    html+=`<div class="cgrid">${byLv[lv].map(x=>`<div class="cc"><div class="ci">${ini(x.n)}</div><div><div class="cn">${x.n}</div><div class="cr">${x.r}${x.co?' — '+x.co:''}</div><a class="ce" href="mailto:${x.e}">${x.e}</a><span class="tag ${lt[x.lv]}">${ll[x.lv]}</span></div></div>`).join('')}</div>`;
-  });
-  document.getElementById('con-grid').innerHTML=html;
-}
-function fReqs(v){rf.s=v;renderReqs()}function fReqsSt(v){rf.st=v;renderReqs()}
-function closeMo(){document.getElementById('mo').classList.remove('open')}
-function closeMoBg(e){if(e.target===document.getElementById('mo'))closeMo()}
-function showT(msg){let el=document.getElementById('centerMsg');if(!el){el=document.createElement('div');el.id='centerMsg';el.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:600;pointer-events:none';document.body.appendChild(el);}el.innerHTML=`<div style="background:var(--ac);color:#fff;padding:13px 22px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:80%;text-align:center;line-height:1.4">${msg}</div>`;el.style.display='flex';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},2600);}
-async function sendReminder(reqId,role,lv){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  const refCode=`[REF: ${getMref(r)}-L${a.lv}-${a.r.replace(/\s+/g,'')}]`;
-  const mref=getMref(r);
-  const subj=encodeURIComponent(`[${mref}] [REMINDER] ${r.sub} — Awaiting your ${a.t} ${refCode}`);
-  const isInfT=isInf(a.t);
-  const reminderClose=isInfT?`If you have any comments or questions, please reply at your earliest convenience. Otherwise no action is required.`:`Please reply to this email with your decision (Approved / Not Approved) at your earliest convenience.\n\nPlease keep the reference code in the subject line when replying.`;
-  const bodyText=`Dear ${a.n||a.r},\n\nThis is a gentle reminder regarding the following action which is awaiting your ${a.t}.\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.\n────────────────────────────\nYOUR ROLE:  ${a.r}\nACTION:     ${a.t}\n────────────────────────────\n\n${reminderClose}\n\nThank you,\n${r.sb}`;
-  const body=encodeURIComponent(bodyText);
-  let hadFiles=false;
-  try{hadFiles=await buildAndDownloadPack(r);}catch(e){showT('Could not build attachment pack');}
-  window.location.href=`mailto:${a.re}?subject=${subj}&body=${body}`;
-  r.notes.push({f:'System',x:`Reminder sent to ${a.r}${hadFiles?' + attachment pack downloaded':''} — ${refCode}`,at:now()});
-  save();renderAll();openModal(reqId);
-  showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the reminder email before sending.':'Summary downloaded.<br>Drag it into the reminder email before sending.');
-}
-async function notifyAll(reqId,lv,type){
-  const r=reqs.find(x=>x.id===reqId);if(!r)return;
-  if(r.status==='Rejected'){showT('Cannot send — request has been rejected');return}
-  const grp=r.apvs.filter(x=>x.lv===parseInt(lv)&&x.t===type&&isInf(x.t));if(!grp.length)return;
-  const tos=grp.map(x=>x.re).filter(Boolean).join(',');
-  const mref=getMref(r);
-  const refCode=`[REF: ${getMref(r)}-L${lv}-${type.replace(/[^A-Za-z]/g,'')}]`;
-  const subj=encodeURIComponent(`[${mref}] [NOTIFY] ${r.sub} ${refCode}`);
-  const consult=/consult/i.test(type);
-  const opening=consult?`This email is to inform and consult with you on the following action under the Ben Line Delegation of Authority policy.\n\nWhile no formal approval is required, your input and feedback are valued. Please feel free to share any comments or concerns.`:`This email is to inform you of the following action under the Ben Line Delegation of Authority policy.\n\nThis is for your information only — no action or response is required from you.`;
-  const closing=consult?`Please share any comments or concerns at your earliest convenience. If we do not hear from you, we will proceed with this action.`:`No further action is required from you. This email is for your records.`;
-  const bodyText=`Dear all,\n\n${opening}\n\n────────────────────────────\nACTION:     ${r.sub}\nSCOPE:      ${r.scope||'Group'}\nAREA:       ${r.area} / ${r.cat}\nSUBMITTED:  ${r.sb}  |  ${r.dt}\nCOUNTRY:    ${r.co||'Group'}\nMASTER REF: ${mref}\nREFERENCE:  ${refCode}\n────────────────────────────\nPURPOSE / JUSTIFICATION:\n${r.purpose}\n\nPlease find the supporting documents attached.\n────────────────────────────\nLEVEL:      L${lv}\nACTION:     ${type}\n────────────────────────────\n\n${closing}\n\nThank you,\n${r.sb}`;
-  const body=encodeURIComponent(bodyText);
-  let hadFiles=false;
-  try{hadFiles=await buildAndDownloadPack(r);}catch(e){showT('Could not build attachment pack');}
-  window.location.href=`mailto:${tos}?subject=${subj}&body=${body}`;
-  grp.forEach(a=>{a.sent=true;if(a.st==='Pending')a.st='Email Sent';});
-  r.notes.push({f:'System',x:`Notified ${grp.length} recipient(s) at L${lv} (${type})${hadFiles?' + attachment pack downloaded':''} — ${refCode}`,at:now()});
-  save();renderAll();openModal(reqId);
-  showCenter(hadFiles?'Files downloaded.<br>Drag the ZIP into the Outlook email before sending.':'Summary downloaded.<br>Drag it into the Outlook email before sending.');
-}
-function naAll(reqId,lv,type){
-  const r=reqs.find(x=>x.id===reqId);if(!r)return;
-  const grp=r.apvs.filter(x=>x.lv===parseInt(lv)&&x.t===type&&isInf(x.t));if(!grp.length)return;
-  const allNa=grp.every(a=>a.st==='N.A');
-  if(allNa){
-    grp.forEach(a=>{a.st=a.sent?'Email Sent':'Pending';a.cm='';a.at=null;});
-    r.notes.push({f:me?.n||'User',x:`Cancelled N.A for ${grp.length} recipient(s) at L${lv} (${type})`,at:now()});
-  }else{
-    const reason=prompt('Reason for N.A (applies to all in this group):')||'N/A';
-    grp.forEach(a=>{a.st='N.A';a.cm=reason;a.at=now();});
-    r.notes.push({f:me?.n||'User',x:`N.A for ${grp.length} recipient(s) at L${lv} (${type}): ${reason}`,at:now()});
-  }
-  recomputeStatus(r);save();renderAll();openModal(reqId);
-}
-// ── ADMIN PIN ──
-const ADMIN_PIN='1234';
-function checkPin(){return prompt('Admin PIN required:')===ADMIN_PIN}
-function showAddApvForm(reqId){
-  if(!checkPin()){showT('Incorrect PIN');return}
-  const panel=document.getElementById('add-apv-panel-'+reqId);
-  if(panel)panel.style.display=panel.style.display==='none'?'block':'none';
-}
-function apvRoleChange(reqId){
-  const role=document.getElementById('apv-role-'+reqId).value;
-  if(!role)return;
-  const c=getCONS().find(x=>x.r===role);
-  if(c){
-    document.getElementById('apv-name-'+reqId).value=c.n||'';
-    document.getElementById('apv-email-'+reqId).value=c.e||'';
-    const lvSel=document.getElementById('apv-lv-'+reqId);
-    if(c.lv)lvSel.value=String(c.lv);
-  }
-}
-function confirmAddApv(reqId){
-  const r=reqs.find(x=>x.id===reqId);if(!r)return;
-  const role=document.getElementById('apv-role-'+reqId).value;
-  const name=document.getElementById('apv-name-'+reqId).value.trim();
-  const email=document.getElementById('apv-email-'+reqId).value.trim();
-  const lv=parseInt(document.getElementById('apv-lv-'+reqId).value);
-  const type=document.getElementById('apv-type-'+reqId).value;
-  if(!role||!email){showT('Role and email are required');return}
-  r.apvs.push({lv,r:role,t:type,n:name||role,re:email,st:'Pending',sent:false,at:null,cm:''});
-  r.notes.push({f:me?.n||'Admin',x:`Approver added: ${role} (${name||role}) at Level ${lv} — ${type}`,at:now()});
-  save();renderAll();openModal(reqId);showT('Approver added — '+role);
-}
-function removeApv(reqId,role,lv){
-  if(!checkPin()){showT('Incorrect PIN');return}
-  const r=reqs.find(x=>x.id===reqId);if(!r)return;
-  const idx=r.apvs.findIndex(x=>x.r===role&&String(x.lv)===String(lv)&&x.st==='Pending');
-  if(idx===-1){showT('Cannot remove — approver already actioned');return}
-  r.apvs.splice(idx,1);
-  r.notes.push({f:me?.n||'Admin',x:`Approver removed: ${role} at Level ${lv}`,at:now()});
-  save();renderAll();openModal(reqId);showT('Approver removed — '+role);
-}
-function clearAllData(){if(!confirm("This will delete ALL your saved requests and log you out. Are you sure?"))return;localStorage.clear();location.reload();}
-
-// ── FILE UPLOAD ──
-function fmtSize(b){if(b==null)return'';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(0)+' KB';return(b/1048576).toFixed(1)+' MB';}
-function openUpload(reqId,role,lv){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  if(!a.files)a.files=[];
-  const higherFiles=r.apvs.filter(x=>x.lv>parseInt(lv)&&(x.files||[]).length);
-  const carryHtml=higherFiles.length?`<div class="carry-banner"><strong>Files from prior levels</strong> — these are bundled into the ZIP automatically when you Send:<br>${higherFiles.flatMap(x=>(x.files||[]).map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${x.r}','${x.lv}','${f.id}')">${f.name} <span style="color:var(--tx3)">(L${x.lv} — ${x.r})</span></span>`)).join('')}</div>`:'';
-  const fileHtml=a.files.length?`<div style="margin-top:10px"><div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:4px">Uploaded files (${a.files.length}):</div>${a.files.map(f=>`<span class="eh-file" onclick="viewFile('${reqId}','${role}','${lv}','${f.id}')">📄 ${f.name}${f.size?` <span style="color:var(--tx3)">${fmtSize(f.size)}</span>`:''}</span> <span style="font-size:9px;color:var(--rd);cursor:pointer" onclick="removeFile('${reqId}','${role}','${lv}','${f.id}')" title="Remove">✕</span>`).join(' ')}</div>`:`<div style="font-size:11px;color:var(--tx3);padding:8px 0">No files uploaded for this approver yet.</div>`;
-  document.getElementById('ehmb').innerHTML=`
-    <h3 style="font-size:15px;font-weight:600;margin-bottom:2px">Upload files</h3>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">${a.r}${a.n&&a.n!==a.r?` (${a.n})`:''} · L${lv} · ${a.t}</div>
-    ${carryHtml}
-    <div style="font-size:11px;color:var(--tx2);margin:6px 0 8px">Upload supporting documents or a saved email exchange. Everything uploaded across all levels is gathered into one ZIP when you click <strong>Send</strong>.</div>
-    <label class="btn" style="font-size:13px;padding:7px 14px;cursor:pointer;color:var(--tl);border-color:var(--tl)">Choose files<input type="file" style="display:none" multiple onchange="attachFiles(event,'${reqId}','${role}','${lv}')"/></label>
-    <button class="btn" style="font-size:13px;padding:7px 13px;margin-left:6px" onclick="closeEh()">Close</button>
-    ${fileHtml}
-    <div style="font-size:9px;color:var(--tx3);margin-top:8px">Stored locally in this browser (IndexedDB). Up to 50 MB per file.</div>`;
-  document.getElementById('ehmo').classList.add('open');
-}
-function openAttach(reqId,role,lv){openUpload(reqId,role,lv);}
-async function attachFiles(event,reqId,role,lv){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  if(!a.files)a.files=[];
-  const files=Array.from(event.target.files);const MAX=50*1024*1024;let added=0;
-  for(const file of files){
-    if(file.size>MAX){showT(`${file.name} too large — max 50 MB per file`);continue;}
-    const fid='f'+Date.now()+Math.random().toString(36).slice(2,6);
-    try{await idbPut(fid,file);a.files.push({id:fid,name:file.name,type:file.type,size:file.size,at:now()});r.notes.push({f:'System',x:`File uploaded: ${file.name} → ${a.r} (L${lv})`,at:now()});added++;}
-    catch(e){showT('Could not store '+file.name);}
-  }
-  save();renderAll();openUpload(reqId,role,lv);if(added)showT(`${added} file(s) uploaded`);
-}
-async function viewFile(reqId,role,lv,fid){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  const f=(a.files||[]).find(x=>x.id===fid);if(!f)return;
-  const blob=await getFileBlob(f);if(!blob){showT('File not found');return;}
-  const url=URL.createObjectURL(blob);
-  if(f.type&&f.type.startsWith('image/')){const w=window.open('','_blank');if(w)w.document.write(`<html><body style="margin:0;background:#000"><img src="${url}" style="max-width:100%;display:block;margin:auto"/></body></html>`);}
-  else{const link=document.createElement('a');link.href=url;link.download=f.name;document.body.appendChild(link);link.click();link.remove();}
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
-}
-async function removeFile(reqId,role,lv,fid){
-  const r=reqs.find(x=>x.id===reqId),a=r.apvs.find(x=>x.r===role&&x.lv===parseInt(lv));if(!a)return;
-  const idx=(a.files||[]).findIndex(x=>x.id===fid);if(idx===-1)return;
-  const name=a.files[idx].name;
-  try{await idbDel(fid);}catch(e){}
-  a.files.splice(idx,1);
-  r.notes.push({f:'System',x:`File removed: ${name} from ${a.r} (L${lv})`,at:now()});
-  save();renderAll();openUpload(reqId,role,lv);showT('File removed');
-}
-function closeEh(){document.getElementById('ehmo').classList.remove('open');}
-function closeEhBg(e){if(e.target===document.getElementById('ehmo'))closeEh();}
-
-// ── EXPORT PDF ──
-function buildReqHtml(r,lvN){
-  const apvs=r.apvs.filter(a=>isApv(a.t));
-  const infs=r.apvs.filter(a=>isInf(a.t));
-  const stClass=r.status==='Approved'?'st-approved':r.status==='Rejected'?'st-rejected':r.status==='N.A'?'st-na':'st-pending';
-  let eHtml='';
-  r.apvs.forEach(a=>{
-    if((a.files||[]).length){
-      eHtml+=`<div style="margin-top:6px;padding:6px 8px;background:#f5f4f0;border-radius:4px;border-left:3px solid #1a3a6b"><strong style="font-size:9px;color:#1a3a6b">UPLOADED FILES — ${a.r} (L${a.lv})</strong>`;
-      eHtml+=`<div style="font-size:9px;color:#6b6960;margin-top:3px">📎 ${a.files.map(f=>f.name).join(', ')}</div>`;
-      eHtml+='</div>';
     }
   });
-  return `<div class="req">
-    <div class="rtitle">${r.sub}</div>
-    <div class="rmeta">${r.scope?r.scope+' | ':''}${r.area} / ${r.cat} · ID: ${r.id} · Submitted: ${r.dt} by ${r.sb} · Country: ${r.co||'Group'} · Status: <span class="${stClass}">${r.status}</span></div>
-    ${r.purpose?`<div class="rpurpose"><strong>Purpose:</strong> ${r.purpose}</div>`:''}
-    <table><thead><tr><th>Level</th><th>Role</th><th>Name</th><th>Email</th><th>Type</th><th>Status</th><th>Decision Time</th><th>Comment</th></tr></thead><tbody>
-    ${apvs.map(a=>{const sc=a.st==='Approved'?'st-approved':a.st==='Rejected'?'st-rejected':a.st==='N.A'?'st-na':a.st==='Email Sent'?'st-sent':'st-pending';return`<tr><td>${lvN[a.lv]||'L'+a.lv}</td><td>${a.r}</td><td>${a.n||''}</td><td>${a.re||''}</td><td>${a.t}</td><td class="${sc}">${a.st}</td><td>${a.at||'—'}</td><td>${a.cm||'—'}</td></tr>`;}).join('')}
-    </tbody></table>
-    ${infs.length?`<strong style="font-size:9px;color:#6b6960">INFORM / NOTIFY</strong><table><thead><tr><th>Level</th><th>Role</th><th>Name</th><th>Email</th><th>Type</th><th>Status</th></tr></thead><tbody>${infs.map(a=>`<tr><td>${lvN[a.lv]||'L'+a.lv}</td><td>${a.r}</td><td>${a.n||''}</td><td>${a.re||''}</td><td>${a.t}</td><td>${a.st}</td></tr>`).join('')}</tbody></table>`:''}
-    ${eHtml}
-    ${r.notes.length?`<h2>Activity Log</h2>${r.notes.map(nt=>`<div class="note"><span class="note-who">${nt.f}</span> · ${nt.at}<br>${nt.x}</div>`).join('')}`:''}
-  </div>`;
-}
-const PDF_STYLE=`<style>body{font-family:Arial,sans-serif;font-size:11px;color:#1a1916;margin:0;padding:20px}h1{font-size:16px;font-weight:700;margin-bottom:2px}.sub{font-size:10px;color:#6b6960;margin-bottom:20px}.req{border:1px solid #e2e0d8;border-radius:6px;padding:12px 14px;margin-bottom:14px;page-break-inside:avoid}.rtitle{font-size:12px;font-weight:700;margin-bottom:2px}.rmeta{font-size:10px;color:#6b6960;margin-bottom:8px}.rpurpose{font-size:10px;color:#444;background:#f5f4f0;padding:6px 8px;border-radius:4px;margin-bottom:8px}table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:8px}th{background:#f0efe9;border:1px solid #e2e0d8;padding:4px 6px;text-align:left;font-weight:600;color:#6b6960;text-transform:uppercase;font-size:9px}td{border:1px solid #e2e0d8;padding:4px 6px;vertical-align:top}.st-approved{color:#1a5c3a;font-weight:600}.st-rejected{color:#7a1e1e;font-weight:600}.st-na{color:#4a1a7a;font-weight:600}.st-pending{color:#9e9c94}.st-sent{color:#0a5c5c}.note{font-size:9px;color:#6b6960;border-left:2px solid #e2e0d8;padding-left:6px;margin-bottom:3px}.note-who{font-weight:600;color:#1a1916}h2{font-size:11px;font-weight:600;color:#6b6960;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 5px;border-top:1px solid #e2e0d8;padding-top:8px}@media print{body{padding:10px}.req{page-break-inside:avoid}}</style>`;
-function openPdfWindow(html){
-  const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  const w=window.open(url,'_blank');
-  if(w){w.onload=()=>{w.print();URL.revokeObjectURL(url);}}
-  else{const a=document.createElement('a');a.href=url;a.download='DOA_Export_'+new Date().toISOString().slice(0,10)+'.html';a.click();URL.revokeObjectURL(url);}
-  showT('Export ready — print as PDF from the new tab');
-}
-function exportPDF(){
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
-  let html=`<html><head><meta charset="UTF-8"><title>DOA Approval History</title>${PDF_STYLE}</head><body><h1>DOA Approval History</h1><div class="sub">Exported ${now()} · ${reqs.length} request(s) · User: ${me?.n||''} (${me?.e||''})</div>`;
-  reqs.forEach(r=>{html+=buildReqHtml(r,lvN);});
-  html+='</body></html>';
-  openPdfWindow(html);
-}
-function exportAllReqsPDF(){
-  const myReqs=reqs.filter(r=>r.sb===me?.n||r.se===me?.e);
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
-  let html=`<html><head><meta charset="UTF-8"><title>My DOA Requests</title>${PDF_STYLE}</head><body><h1>My DOA Requests</h1><div class="sub">Exported ${now()} · ${myReqs.length} request(s) · User: ${me?.n||''} (${me?.e||''})</div>`;
-  myReqs.forEach(r=>{html+=buildReqHtml(r,lvN);});
-  html+='</body></html>';
-  openPdfWindow(html);
-}
-// ── EXPORT MODE ──
-let exportMode=false;
-let exportSelected=new Set();
-function toggleExportMode(){
-  exportMode=true;exportSelected.clear();
-  document.getElementById('export-select-btn').style.display='none';
-  document.getElementById('export-confirm-btn').style.display='inline-flex';
-  document.getElementById('export-cancel-btn').style.display='inline-flex';
-  document.getElementById('export-count-label').style.display='inline';
-  renderReqs();
-}
-function cancelExportMode(){
-  exportMode=false;exportSelected.clear();
-  document.getElementById('export-select-btn').style.display='inline-flex';
-  document.getElementById('export-confirm-btn').style.display='none';
-  document.getElementById('export-cancel-btn').style.display='none';
-  document.getElementById('export-count-label').style.display='none';
-  renderReqs();
-}
-function toggleExportSelect(reqId){
-  if(exportSelected.has(reqId))exportSelected.delete(reqId);
-  else exportSelected.add(reqId);
-  const lbl=document.getElementById('export-count-label');
-  if(lbl)lbl.textContent=exportSelected.size+' selected';
-  const cb=document.getElementById('export-cb-'+reqId);
-  if(cb)cb.checked=exportSelected.has(reqId);
-}
-function exportSelectedPDF(){
-  if(!exportSelected.size){showT('Select at least one request first');return}
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
-  const selected=reqs.filter(r=>exportSelected.has(r.id));
-  let html=`<html><head><meta charset="UTF-8"><title>DOA Export</title>${PDF_STYLE}</head><body><h1>DOA Requests Export</h1><div class="sub">Exported ${now()} · ${selected.length} request(s) · User: ${me?.n||''} (${me?.e||''})</div>`;
-  selected.forEach(r=>{html+=buildReqHtml(r,lvN);});
-  html+='</body></html>';
-  openPdfWindow(html);
-  cancelExportMode();
-}
-function exportSingleReqPDF(reqId){
-  const r=reqs.find(x=>x.id===reqId);if(!r)return;
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
-  const html=`<html><head><meta charset="UTF-8"><title>DOA Request — ${r.sub}</title>${PDF_STYLE}</head><body><h1>DOA Request Report</h1><div class="sub">Exported ${now()} · User: ${me?.n||''}</div>${buildReqHtml(r,lvN)}</body></html>`;
-  openPdfWindow(html);
 }
 
-// ── MATRIX ADMIN (PIN = 1111) ──
-const MATRIX_PIN='1111';
-let DOA_CUSTOM=JSON.parse(localStorage.getItem('doa_custom')||'[]');
-let CONS_CUSTOM=JSON.parse(localStorage.getItem('cons_custom')||'[]');
-function getDOA(){
-  const removedKeys=new Set(DOA_CUSTOM.filter(x=>x._removed).map(x=>`${x.sc}|${x.a}|${x.c}|${x.s}|${x.r}|${x.lv}`));
-  const base=DOA.filter(r=>!removedKeys.has(`${r.sc}|${r.a}|${r.c}|${r.s}|${r.r}|${r.lv}`));
-  return [...base,...DOA_CUSTOM.filter(x=>!x._removed)];
-}
-function getCONS(){
-  const removedKeys=new Set(CONS_CUSTOM.filter(x=>x._removed).map(x=>`${x.n}|${x.r}|${x.e}`));
-  const base=CONS.filter(c=>!removedKeys.has(`${c.n}|${c.r}|${c.e}`));
-  return [...base,...CONS_CUSTOM.filter(x=>!x._removed)];
-}
-function saveCustom(){localStorage.setItem('doa_custom',JSON.stringify(DOA_CUSTOM));localStorage.setItem('cons_custom',JSON.stringify(CONS_CUSTOM));buildIndex();}
-function checkMtxPin(){return prompt('Admin PIN required:')===MATRIX_PIN}
+// ── SAVINGS ───────────────────────────────────────────────────
+function renderSavings() {
+  const s = STATE.savings;
+  const mA = toDisp(s.monthActualSGD), mT = toDisp(s.monthTargetSGD);
+  const yA = toDisp(s.yearActualSGD),  yT = toDisp(s.yearTargetSGD);
+  const mPct = mT > 0 ? Math.min(mA/mT*100,100).toFixed(0) : 0;
+  const yPct = yT > 0 ? Math.min(yA/yT*100,100).toFixed(0) : 0;
+  const col = p => p>=100?'#3a7d5e':p>=50?'#3a5c8a':'#c07820';
 
-function buildSelectWithNew(id,options,placeholder){
-  return`<select class="fs" id="${id}" style="font-size:11px;white-space:normal;word-break:break-word"><option value="">— ${placeholder} —</option>${options.map(o=>`<option value="${o}" title="${o}">${o}</option>`).join('')}<option value="__new__">✚ Add new…</option></select>`;
-}
-function handleNewOption(selId){
-  const sel=document.getElementById(selId);if(!sel)return;
-  if(sel.value==='__new__'){
-    const val=prompt('Enter new value:');
-    if(val&&val.trim()){
-      const opt=document.createElement('option');opt.value=val.trim();opt.textContent=val.trim();
-      sel.insertBefore(opt,sel.lastElementChild);sel.value=val.trim();
-    } else sel.value='';
-  }
-}
-function buildLogicEditForm(prefix,lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,rule){
-  const val=(key)=>rule?rule[key]:'';
-  const selWithPrefill=(id,options,placeholder,current)=>{
-    const opts=options.includes(current)?options:[...options,current].filter(Boolean);
-    return`<select class="fs" id="${id}" style="font-size:13px;white-space:normal;word-break:break-word;height:auto">${!current?`<option value="">— ${placeholder} —</option>`:''}`+opts.map(o=>`<option value="${o}" ${o===current?'selected':''} title="${o}">${o}</option>`).join('')+`<option value="__new__">✚ Add new…</option></select>`;
-  };
-  return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <div><div class="fl" style="font-size:13px">Scope</div>${selWithPrefill(prefix+'sc',allScopes,'select scope',val('sc'))}</div>
-    <div><div class="fl" style="font-size:13px">Area</div>${selWithPrefill(prefix+'a',allAreas,'select area',val('a'))}</div>
-    <div><div class="fl" style="font-size:13px">Category</div>${selWithPrefill(prefix+'c',allCats,'select category',val('c'))}</div>
-    <div><div class="fl" style="font-size:13px">Sub-category / Action</div>${selWithPrefill(prefix+'s',allSubs,'select sub-category',val('s'))}</div>
-    <div><div class="fl" style="font-size:13px">Approver Role</div><select class="fs" id="${prefix}r" style="font-size:13px"><option value="">— select role —</option>${allRoles.map(r=>`<option value="${r}" ${r===val('r')?'selected':''}>${r}</option>`).join('')}<option value="__note__" disabled style="color:var(--tx3)">── create contact first for new roles ──</option></select></div>
-    <div><div class="fl" style="font-size:13px">Level</div><select class="fs" id="${prefix}lv" style="font-size:13px">${lvOpts}</select></div>
-    <div><div class="fl" style="font-size:13px">Type</div><select class="fs" id="${prefix}t" style="font-size:13px">${typeOpts}</select></div>
-  </div>`;
-  if(rule){setTimeout(()=>{const lvEl=document.getElementById(prefix+'lv');if(lvEl)lvEl.value=String(rule.lv);const tEl=document.getElementById(prefix+'t');if(tEl)tEl.value=rule.t;},0);}
-}
-
-let adminFilterState={action:'',sc:'',a:'',c:'',s:''};
-function buildAdminCascade(action){
-  adminFilterState.action=action;
-  const allDOA=getDOA();
-  const scopes=[...new Set(allDOA.map(r=>r.sc))].sort();
-  const panel=document.getElementById('admin-cascade-filter');
-  panel.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
-      <div><div class="fl" style="font-size:13px">Scope</div>
-        <select class="fs" id="adm-f-sc" style="font-size:13px" onchange="adminCascadeChange('sc',this.value)">
-          <option value="">All scopes</option>${scopes.map(s=>`<option value="${s}">${s}</option>`).join('')}
-        </select></div>
-      <div><div class="fl" style="font-size:13px">Area</div>
-        <select class="fs" id="adm-f-a" style="font-size:13px" disabled onchange="adminCascadeChange('a',this.value)">
-          <option value="">— select scope first —</option>
-        </select></div>
-      <div><div class="fl" style="font-size:13px">Category</div>
-        <select class="fs" id="adm-f-c" style="font-size:13px" disabled onchange="adminCascadeChange('c',this.value)">
-          <option value="">— select area first —</option>
-        </select></div>
-      <div><div class="fl" style="font-size:13px">Sub-category</div>
-        <select class="fs" id="adm-f-s" style="font-size:13px;white-space:normal;word-break:break-word" disabled onchange="adminCascadeChange('s',this.value)">
-          <option value="">— select category first —</option>
-        </select></div>
-    </div>
-    <div id="adm-rule-list" style="margin-bottom:10px"><div style="font-size:13px;color:var(--tx3)">Select scope to filter rules…</div></div>`;
-}
-function adminCascadeChange(field,val){
-  adminFilterState[field]=val;
-  if(field==='sc'){adminFilterState.a='';adminFilterState.c='';adminFilterState.s='';}
-  if(field==='a'){adminFilterState.c='';adminFilterState.s='';}
-  if(field==='c'){adminFilterState.s='';}
-  const allDOA=getDOA();
-  const aEl=document.getElementById('adm-f-a');
-  if(aEl){
-    const areas=[...new Set(allDOA.filter(r=>!adminFilterState.sc||r.sc===adminFilterState.sc).map(r=>r.a))].sort();
-    aEl.disabled=!adminFilterState.sc;
-    aEl.innerHTML=`<option value="">All areas</option>`+areas.map(a=>`<option value="${a}" ${a===adminFilterState.a?'selected':''}>${a}</option>`).join('');
-  }
-  const cEl=document.getElementById('adm-f-c');
-  if(cEl){
-    const cats=[...new Set(allDOA.filter(r=>(!adminFilterState.sc||r.sc===adminFilterState.sc)&&(!adminFilterState.a||r.a===adminFilterState.a)).map(r=>r.c))].sort();
-    cEl.disabled=!adminFilterState.a;
-    cEl.innerHTML=`<option value="">All categories</option>`+cats.map(c=>`<option value="${c}" ${c===adminFilterState.c?'selected':''}>${c}</option>`).join('');
-  }
-  const sEl=document.getElementById('adm-f-s');
-  if(sEl){
-    const subs=[...new Set(allDOA.filter(r=>(!adminFilterState.sc||r.sc===adminFilterState.sc)&&(!adminFilterState.a||r.a===adminFilterState.a)&&(!adminFilterState.c||r.c===adminFilterState.c)).map(r=>r.s))].sort();
-    sEl.disabled=!adminFilterState.c;
-    sEl.innerHTML=`<option value="">All sub-categories</option>`+subs.map(s=>`<option value="${s}" ${s===adminFilterState.s?'selected':''}>${s}</option>`).join('');
-  }
-  adminRenderRuleList();
-}
-function adminRenderRuleList(){
-  const allDOA=getDOA();
-  const {sc,a,c,s,action}=adminFilterState;
-  const lvN={1:'L1 Board',2:'L2 Executive',3:'L3 Product',4:'L4 Functions',5:'L5 Country'};
-  let rules=allDOA.filter(r=>(!sc||r.sc===sc)&&(!a||r.a===a)&&(!c||r.c===c)&&(!s||r.s===s));
-  const el=document.getElementById('adm-rule-list');if(!el)return;
-  if(!rules.length){el.innerHTML=`<div style="font-size:13px;color:var(--tx3)">No rules match. Adjust filters above.</div>`;return;}
-  if(action==='update-logic'){
-    el.innerHTML=`<div class="fl" style="font-size:13px;margin-bottom:4px">Select rule to edit (${rules.length} shown)</div>`+
-      `<select class="fs" id="al-upd-sel" style="font-size:13px;width:100%" onchange="loadLogicForEdit()">`+
-      `<option value="">— select —</option>`+
-      rules.map(r=>{const i=allDOA.indexOf(r);return`<option value="${i}">[${r.sc}] ${r.a} / ${r.c} / ${r.s.substring(0,50)}${r.s.length>50?'…':''} — ${r.r} (${lvN[r.lv]||'L'+r.lv})</option>`;}).join('')+
-      `</select>`+
-      `<div id="al-upd-form" style="display:none;margin-top:10px"><div id="al-upd-fields"></div>`+
-      `<div class="ib" style="margin-bottom:8px;font-size:13px">Changes apply to new requests only.</div>`+
-      `<div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doUpdateLogic()">Save Changes</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div></div>`;
-  } else if(action==='remove-logic'){
-    el.innerHTML=`<div class="fl" style="font-size:13px;margin-bottom:4px">Select rule to remove (${rules.length} shown)</div>`+
-      `<select class="fs" id="al-rm-sel" style="font-size:13px;width:100%;margin-bottom:10px" onchange="adminShowRemovePreview()">`+
-      `<option value="">— select —</option>`+
-      rules.map(r=>{const i=allDOA.indexOf(r);return`<option value="${i}">[${r.sc}] ${r.a} / ${r.c} / ${r.s.substring(0,50)}${r.s.length>50?'…':''} — ${r.r} (${lvN[r.lv]||'L'+r.lv})</option>`;}).join('')+
-      `</select>`+
-      `<div id="al-rm-preview" style="display:none;margin-bottom:10px;padding:8px 10px;background:var(--rdb);border:.5px solid #d09090;border-radius:var(--rs);font-size:13px"></div>`+
-      `<div style="display:flex;gap:6px"><button class="btn btn-no" style="font-size:13px" onclick="doRemoveLogic()">Remove Rule</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
-  }
-}
-function adminShowRemovePreview(){
-  const sel=document.getElementById('al-rm-sel');if(!sel)return;
-  const idx=parseInt(sel.value);const preview=document.getElementById('al-rm-preview');if(!preview)return;
-  if(isNaN(idx)){preview.style.display='none';return;}
-  const rule=getDOA()[idx];
-  preview.style.display='block';preview.innerHTML=`Will remove: <strong>[${rule.sc}] ${rule.a} / ${rule.c} / ${rule.s}</strong> — ${rule.r} (L${rule.lv}, ${rule.t})`;
-}
-
-const COUNTRY_LIST=["Singapore","China","Hong Kong","Taiwan","Korea","Japan","Indonesia","North America","Canada","India","Sri Lanka","Thailand","Cambodia","Philippines","Vietnam","Malaysia","Bangladesh","Australia","Myanmar","Brunei","Group"];
-
-function mtxAdmin(action){
-  if(!checkMtxPin()){showT('Incorrect PIN');return}
-  const panel=document.getElementById('mtx-admin-panel');
-  panel.style.display='block';
-  const typeOpts=['Approval','Scope Approval','Inform','Scope Inform','Inform & Consult','Scope Inform & Consult'].map(t=>`<option value="${t}">${t}</option>`).join('');
-  const lvOpts='<option value="5">L5 — Country</option><option value="4">L4 — Functions</option><option value="3">L3 — Product</option><option value="2">L2 — Executive</option><option value="1">L1 — Board</option>';
-  const allDOA=getDOA();
-  const allScopes=[...new Set(allDOA.map(r=>r.sc))].sort();
-  const allAreas=[...new Set(allDOA.map(r=>r.a))].sort();
-  const allCats=[...new Set(allDOA.map(r=>r.c))].sort();
-  const allSubs=[...new Set(allDOA.map(r=>r.s))].sort();
-  const allRoles=[...new Set(getCONS().map(c=>c.r))].sort();
-  const countryOptHtml=`<option value="">— none / Group —</option>`+COUNTRY_LIST.map(c=>`<option value="${c}">${c}</option>`).join('')+`<option value="__new__">✚ Add new country…</option>`;
-
-  if(action==='create-logic'){
-    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">＋ Create Approval Logic Rule</div>
-    <div class="ib" style="margin-bottom:10px;font-size:13px">Select from existing values or <strong>✚ Add new…</strong> to type a new one. Changes apply to new requests only.</div>
-    ${buildLogicEditForm('al-',lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,null)}
-    <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">After choosing "✚ Add new…" type the value in the prompt — it will be selected automatically.</div>
-    <div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doCreateLogic()">Create Rule</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
-    ['al-sc','al-a','al-c','al-s'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>handleNewOption(id));});
-  } else if(action==='update-logic'){
-    adminFilterState={action:'update-logic',sc:'',a:'',c:'',s:''};
-    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:8px">✎ Update Approval Logic</div>
-    <div class="wb" style="margin-bottom:10px;font-size:13px">Filter rules using the dropdowns below, then select the rule to edit. Editing base rules saves an override.</div>
-    <div id="admin-cascade-filter"></div>`;
-    buildAdminCascade('update-logic');
-  } else if(action==='remove-logic'){
-    adminFilterState={action:'remove-logic',sc:'',a:'',c:'',s:''};
-    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:8px">✕ Remove Approval Logic</div>
-    <div class="wb" style="margin-bottom:10px;font-size:13px">Filter rules using the dropdowns below, then select the rule to remove. Changes apply to new requests only.</div>
-    <div id="admin-cascade-filter"></div>`;
-    buildAdminCascade('remove-logic');
-  } else if(action==='create-contact'){
-    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">＋ Create Contact</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-      <div><div class="fl" style="font-size:13px">Full Name</div><input class="fi" id="co-n" placeholder="e.g. John Smith" style="font-size:13px"/></div>
-      <div><div class="fl" style="font-size:13px">Role</div><input class="fi" id="co-r" placeholder="e.g. Country Manager" style="font-size:13px"/></div>
-      <div><div class="fl" style="font-size:13px">Email</div><input class="fi" id="co-e" placeholder="john.smith@benline.com" style="font-size:13px"/></div>
-      <div><div class="fl" style="font-size:13px">Level</div><select class="fs" id="co-lv" style="font-size:13px">${lvOpts}</select></div>
-      <div><div class="fl" style="font-size:13px">Country</div><select class="fs" id="co-co" style="font-size:13px" onchange="handleNewOption('co-co')">${countryOptHtml}</select></div>
-    </div>
-    <div class="ib" style="margin-bottom:10px;font-size:13px">New contact will appear in Contacts and can be used as an approver role in Create Approval Logic.</div>
-    <div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doCreateContact()">Create Contact</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
-  } else if(action==='update-contact'){
-    const allCons=getCONS();
-    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">✎ Update Contact</div>
-    <div class="wb" style="margin-bottom:8px;font-size:13px">Editing base contacts saves an override copy. Changes apply to new requests only.</div>
-    <select class="fs" id="co-upd-sel" style="font-size:13px;width:100%;margin-bottom:10px" onchange="loadContactForEdit()"><option value="">Select contact...</option>${allCons.map((c,i)=>`<option value="${i}">${c.n} — ${c.r}${c.co?' ('+c.co+')':''}</option>`).join('')}</select>
-    <div id="co-upd-form" style="display:none">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-        <div><div class="fl" style="font-size:13px">Full Name</div><input class="fi" id="co-upd-n" style="font-size:13px"/></div>
-        <div><div class="fl" style="font-size:13px">Role</div><input class="fi" id="co-upd-r" style="font-size:13px"/></div>
-        <div><div class="fl" style="font-size:13px">Email</div><input class="fi" id="co-upd-e" style="font-size:13px"/></div>
-        <div><div class="fl" style="font-size:13px">Level</div><select class="fs" id="co-upd-lv" style="font-size:13px">${lvOpts}</select></div>
-        <div><div class="fl" style="font-size:13px">Country</div><select class="fs" id="co-upd-co" style="font-size:13px" onchange="handleNewOption('co-upd-co')"><option value="">— none / Group —</option>${COUNTRY_LIST.map(c=>`<option value="${c}">${c}</option>`).join('')}<option value="__new__">✚ Add new country…</option></select></div>
+  document.getElementById('sav-list').innerHTML = `
+    <div class="sav-row">
+      <div class="sav-hdr">
+        <div><div class="sav-title">This month</div><div class="sav-period">${curr} · Jun 2026</div></div>
+        <div class="sav-nums">${curr} ${fmtD(mA)} / ${fmtD(mT)}</div>
       </div>
-      <div style="display:flex;gap:6px"><button class="btn btn-p" style="font-size:13px" onclick="doUpdateContact()">Save Changes</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${mPct}%;background:${col(mPct)}"></div></div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:4px;text-align:right">${mPct}% of monthly target</div>
+    </div>
+    <div class="sav-row">
+      <div class="sav-hdr">
+        <div><div class="sav-title">This year</div><div class="sav-period">${curr} · 2026</div></div>
+        <div class="sav-nums">${curr} ${fmtD(yA)} / ${fmtD(yT)}</div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" style="width:${yPct}%;background:${col(yPct)}"></div></div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:4px;text-align:right">${yPct}% of yearly target</div>
     </div>`;
-  } else if(action==='remove-contact'){
-    const allCons=getCONS();
-    panel.innerHTML=`<div style="font-size:14px;font-weight:600;margin-bottom:10px">✕ Remove Contact</div>
-    <select class="fs" id="co-rm-sel" style="font-size:13px;width:100%;margin-bottom:10px"><option value="">Select contact to remove...</option>${allCons.map((c,i)=>`<option value="${i}">${c.n} — ${c.r}${c.co?' ('+c.co+')':''}</option>`).join('')}</select>
-    <div class="wb" style="margin-bottom:10px;font-size:13px">Removes this contact from future requests. Existing requests are unaffected.</div>
-    <div style="display:flex;gap:6px"><button class="btn btn-no" style="font-size:13px" onclick="doRemoveContact()">Remove Contact</button><button class="btn" style="font-size:13px" onclick="closeMtxPanel()">Cancel</button></div>`;
+}
+
+// ── CATEGORIES ────────────────────────────────────────────────
+function renderCats(totalSpentSGD) {
+  const totalSpent = toDisp(totalSpentSGD);
+  document.getElementById('cat-list').innerHTML = STATE.categories.map((c,i) => {
+    const spSGD = catSpentSGD(c);
+    const sp = toDisp(spSGD);
+    const budg = toDisp(c.budgetSGD);
+    const leftAmt = budg - sp;
+    const leftPct = budg > 0 ? Math.max(0, leftAmt/budg*100) : 0;
+    const over = sp > budg && budg > 0;
+    const barColor = over ? '#b84040' : (leftPct < 20 ? '#c07820' : c.color);
+    const emoji = c.emoji || getEmoji(c.name);
+
+    if (catEditMode) {
+      return `<div class="cat-row">
+        <button class="del-btn" onclick="delCat(${i})" style="display:block">×</button>
+        <div class="cat-dot" style="background:${c.color}"></div>
+        <input class="inline-text-inp" value="${emoji}" onchange="STATE.categories[${i}].emoji=this.value;saveData();renderDonut(${totalSpent})" style="max-width:40px">
+        <input class="inline-text-inp" value="${c.name}" onchange="STATE.categories[${i}].name=this.value;saveData();render()">
+        <input class="inline-inp" type="number" value="${fmtD(budg)}" placeholder="Budget" onchange="STATE.categories[${i}].budgetSGD=toSGD(parseFloat(this.value)||0);saveData();render()" style="width:80px">
+      </div>`;
+    }
+    return `<div class="cat-row">
+      <button class="del-btn" onclick="delCat(${i})">×</button>
+      <div class="cat-dot" style="background:${c.color}"></div>
+      <div class="cat-name">${emoji} ${c.name}</div>
+      <div class="cat-bar-wrap">
+        <div class="cat-mini-track"><div class="cat-mini-fill" style="width:${leftPct.toFixed(1)}%;background:${barColor}"></div></div>
+        <div class="cat-left-amt" style="color:${over?'#b84040':'var(--text3)'}">${over?'−':'+'}${fmtD(Math.abs(leftAmt))}</div>
+      </div>
+      <div class="cat-amount" style="color:${over?'#b84040':'var(--text)'}">${fmtD(sp)}</div>
+    </div>`;
+  }).join('');
+
+  if (catEditMode) document.getElementById('cat-card').classList.add('edit-mode');
+  else document.getElementById('cat-card').classList.remove('edit-mode');
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function parseDateVal(dateStr) {
+  // MM/DD → sortable number MMDD
+  if (!dateStr) return 0;
+  const parts = dateStr.split('/');
+  return parseInt(parts[0]||0)*100 + parseInt(parts[1]||0);
+}
+
+function renderTxList() {
+  const list = document.getElementById('tx-list');
+  let txs = [...STATE.txs];
+
+  // filter by category
+  const catFilter = document.getElementById('f-filter-cat')?.value || '';
+  if (catFilter) txs = txs.filter(t => t.category === catFilter);
+
+  // sort
+  const sort = document.getElementById('f-sort')?.value || 'date-desc';
+  txs.sort((a,b) => {
+    if (sort === 'date-desc') return parseDateVal(b.date) - parseDateVal(a.date);
+    if (sort === 'date-asc')  return parseDateVal(a.date) - parseDateVal(b.date);
+    if (sort === 'amount-desc') return toDisp(b.amountSGD) - toDisp(a.amountSGD);
+    if (sort === 'amount-asc')  return toDisp(a.amountSGD) - toDisp(b.amountSGD);
+    return 0;
+  });
+
+  if (!txs.length) {
+    list.innerHTML = '<div style="padding:12px 0;color:var(--text3);font-size:13px;border-top:0.5px solid var(--border)">No entries</div>';
+    return;
+  }
+
+  // find original index for delete
+  list.innerHTML = txs.map(t => {
+    const origIdx = STATE.txs.indexOf(t);
+    const dispAmt = toDisp(t.amountSGD);
+    return `<div class="tx-row">
+      <div class="tx-date">${t.date}</div>
+      <div class="tx-info">
+        <div class="tx-cat">${getCatEmoji(t.category)} ${t.category}</div>
+        <div class="tx-remark">${t.remark||''}</div>
+      </div>
+      <div class="tx-right">
+        <div class="tx-amount ${t.type==='income'?'inc':''}">${t.type==='income'?'+':'-'}${fmtD(dispAmt)}</div>
+        <button class="del-btn" onclick="delTx(${origIdx})" style="display:block">×</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // always show delete btns in history
+  document.getElementById('tx-card').classList.add('edit-mode');
+}
+
+function getCatEmoji(catName) {
+  const c = STATE.categories.find(c=>c.name===catName);
+  return c ? (c.emoji||getEmoji(c.name)) : '📦';
+}
+
+function refreshFilterCatSel() {
+  const sel = document.getElementById('f-filter-cat');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All categories</option>' +
+    STATE.categories.map(c=>`<option value="${c.name}" ${c.name===cur?'selected':''}>${c.emoji||'📦'} ${c.name}</option>`).join('');
+}
+
+// ── CURRENCY ──────────────────────────────────────────────────
+function setCurrency(c) {
+  curr = c;
+  document.querySelectorAll('.curr-btn').forEach(b => b.classList.toggle('active', b.textContent===c));
+  document.getElementById('f-curr').value = c;
+  render();
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  ['donut','savings'].forEach(t => document.getElementById('tab-'+t).style.display = t===name?'':'none');
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── OVERVIEW EDIT ─────────────────────────────────────────────
+function toggleOvEdit() {
+  ovEditOpen = !ovEditOpen;
+  document.getElementById('ov-edit-panel').style.display = ovEditOpen ? 'block' : 'none';
+  document.getElementById('ov-btn').classList.toggle('on', ovEditOpen);
+  document.getElementById('ov-btn').textContent = ovEditOpen ? 'done' : 'edit';
+  // labels show current currency
+  ['ov-edit-curr-lbl','ov-edit-curr-lbl2','ov-edit-curr-lbl3'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent=curr;
+  });
+  if (ovEditOpen) {
+    document.getElementById('ov-budget-inp').value  = fmtD(toDisp(STATE.budgetSGD));
+    document.getElementById('ov-income-inp').value  = fmtD(toDisp(STATE.incomeSGD));
+    document.getElementById('ov-savings-inp').value = fmtD(toDisp(STATE.savingsBalanceSGD));
   }
 }
-function closeMtxPanel(){document.getElementById('mtx-admin-panel').style.display='none';}
-function doCreateLogic(){
-  const sc=document.getElementById('al-sc').value.trim(),a=document.getElementById('al-a').value.trim(),c=document.getElementById('al-c').value.trim(),s=document.getElementById('al-s').value.trim(),r=document.getElementById('al-r').value.trim(),lv=parseInt(document.getElementById('al-lv').value),t=document.getElementById('al-t').value;
-  if(!sc||!a||!c||!s||!r||sc==='__new__'||a==='__new__'||c==='__new__'||s==='__new__'){showT('All fields are required — confirm any new values first');return}
-  DOA_CUSTOM.push({sc,a,c,s,r,lv,t});saveCustom();renderMatrix();closeMtxPanel();showT('Rule created — applies to new requests');
+function saveOv() {
+  const b   = parseFloat(document.getElementById('ov-budget-inp').value);
+  const inc = parseFloat(document.getElementById('ov-income-inp').value);
+  const sav = parseFloat(document.getElementById('ov-savings-inp').value);
+  if (!isNaN(b))   STATE.budgetSGD          = toSGD(b);
+  if (!isNaN(inc)) STATE.incomeSGD          = toSGD(inc);
+  if (!isNaN(sav)) STATE.savingsBalanceSGD  = toSGD(sav);
+  toggleOvEdit();
+  render();
+  showToast('Overview updated');
 }
-function loadLogicForEdit(){
-  const idx=document.getElementById('al-upd-sel').value;
-  if(idx===''){document.getElementById('al-upd-form').style.display='none';return}
-  const rule=getDOA()[parseInt(idx)];
-  const allDOA=getDOA();
-  const allScopes=[...new Set(allDOA.map(r=>r.sc))].sort();
-  const allAreas=[...new Set(allDOA.map(r=>r.a))].sort();
-  const allCats=[...new Set(allDOA.map(r=>r.c))].sort();
-  const allSubs=[...new Set(allDOA.map(r=>r.s))].sort();
-  const allRoles=[...new Set(getCONS().map(c=>c.r))].sort();
-  const typeOpts=['Approval','Scope Approval','Inform','Scope Inform','Inform & Consult','Scope Inform & Consult'].map(t=>`<option value="${t}">${t}</option>`).join('');
-  const lvOpts='<option value="5">L5 — Country</option><option value="4">L4 — Functions</option><option value="3">L3 — Product</option><option value="2">L2 — Executive</option><option value="1">L1 — Board</option>';
-  document.getElementById('al-upd-fields').innerHTML=buildLogicEditForm('al-upd-',lvOpts,typeOpts,allScopes,allAreas,allCats,allSubs,allRoles,rule);
-  ['al-upd-sc','al-upd-a','al-upd-c','al-upd-s'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>handleNewOption(id));});
-  document.getElementById('al-upd-form').style.display='block';
-}
-function doUpdateLogic(){
-  const idx=parseInt(document.getElementById('al-upd-sel').value);if(isNaN(idx)){showT('Select a rule first');return}
-  const sc=document.getElementById('al-upd-sc').value.trim();
-  const a=document.getElementById('al-upd-a').value.trim();
-  const c=document.getElementById('al-upd-c').value.trim();
-  const s=document.getElementById('al-upd-s').value.trim();
-  const r=document.getElementById('al-upd-r').value.trim();
-  const lv=parseInt(document.getElementById('al-upd-lv').value);
-  const t=document.getElementById('al-upd-t').value;
-  if(!sc||!a||!c||!s||!r){showT('All fields are required');return}
-  const updated={sc,a,c,s,r,lv,t};
-  if(idx<DOA.length){
-    const origRule=DOA[idx];
-    const origKey=`${origRule.sc}|${origRule.a}|${origRule.c}|${origRule.s}|${origRule.r}|${origRule.lv}`;
-    const priorIdx=DOA_CUSTOM.findIndex(x=>`${x.sc}|${x.a}|${x.c}|${x.s}|${x.r}|${x.lv}`===origKey);
-    if(priorIdx>-1)DOA_CUSTOM.splice(priorIdx,1);
-    DOA_CUSTOM.push(updated);
-  } else{DOA_CUSTOM[idx-DOA.length]=updated;}
-  saveCustom();renderMatrix();closeMtxPanel();showT('Rule updated — applies to new requests');
-}
-function doRemoveLogic(){
-  const idx=parseInt(document.getElementById('al-rm-sel').value);if(isNaN(idx)){showT('Select a rule first');return}
-  const allDOA=getDOA();
-  if(idx<DOA.length){
-    DOA_CUSTOM.push({...allDOA[idx],_removed:true});
-  } else {DOA_CUSTOM.splice(idx-DOA.length,1);}
-  saveCustom();renderMatrix();closeMtxPanel();showT('Rule removed — applies to new requests');
-}
-function doCreateContact(){
-  const n=document.getElementById('co-n').value.trim(),r=document.getElementById('co-r').value.trim(),e=document.getElementById('co-e').value.trim(),lv=parseInt(document.getElementById('co-lv').value),co=document.getElementById('co-co').value.trim();
-  if(!n||!r||!e){showT('Name, role and email are required');return}
-  const entry={n,r,e,lv};if(co)entry.co=co;
-  CONS_CUSTOM.push(entry);saveCustom();renderCons();closeMtxPanel();showT('Contact created');
-}
-function loadContactForEdit(){
-  const idx=document.getElementById('co-upd-sel').value;
-  if(idx===''){document.getElementById('co-upd-form').style.display='none';return}
-  const c=getCONS()[parseInt(idx)];
-  document.getElementById('co-upd-n').value=c.n;document.getElementById('co-upd-r').value=c.r;document.getElementById('co-upd-e').value=c.e;document.getElementById('co-upd-lv').value=String(c.lv);
-  const coSel=document.getElementById('co-upd-co');if(coSel){const coVal=c.co||'';if(coVal&&![...coSel.options].some(o=>o.value===coVal)){const opt=document.createElement('option');opt.value=coVal;opt.textContent=coVal;coSel.insertBefore(opt,coSel.lastElementChild);}coSel.value=coVal;}
-  document.getElementById('co-upd-form').style.display='block';
-}
-function doUpdateContact(){
-  const idx=parseInt(document.getElementById('co-upd-sel').value);if(isNaN(idx)){showT('Select a contact first');return}
-  const co=document.getElementById('co-upd-co').value.trim();
-  const entry={n:document.getElementById('co-upd-n').value.trim(),r:document.getElementById('co-upd-r').value.trim(),e:document.getElementById('co-upd-e').value.trim(),lv:parseInt(document.getElementById('co-upd-lv').value)};
-  if(co)entry.co=co;
-  if(idx<CONS.length){
-    const origCon=CONS[idx];
-    const origKey=`${origCon.n}|${origCon.r}|${origCon.e}`;
-    const priorIdx=CONS_CUSTOM.findIndex(x=>`${x.n}|${x.r}|${x.e}`===origKey);
-    if(priorIdx>-1)CONS_CUSTOM.splice(priorIdx,1);
-    CONS_CUSTOM.push(entry);
-  } else{CONS_CUSTOM[idx-CONS.length]=entry;}
-  saveCustom();renderCons();closeMtxPanel();showT('Contact updated');
-}
-function doRemoveContact(){
-  const idx=parseInt(document.getElementById('co-rm-sel').value);if(isNaN(idx)){showT('Select a contact first');return}
-  if(idx<CONS.length){CONS_CUSTOM.push({...getCONS()[idx],_removed:true});}
-  else{CONS_CUSTOM.splice(idx-CONS.length,1);}
-  saveCustom();renderCons();closeMtxPanel();showT('Contact removed');
-}
-try{idbOpen().then(()=>migrateFilesToIDB()).catch(()=>{});}catch(e){}
-</script>
-    <script>
-const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-msalInstance.initialize().then(() => {
-    msalInstance.handleRedirectPromise().then((response) => {
-        if (response) {
-            console.log("Logged in:", response.account.username);
-        } else {
-            const accounts = msalInstance.getAllAccounts();
-            if (accounts.length === 0) {
-                msalInstance.loginPopup({ scopes: ["User.Read"] })
-                    .then(response => {
-                        console.log("Logged in as:", response.account.username);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            }
-        }
-    });
-});
+// ── CAT EDIT ──────────────────────────────────────────────────
+function toggleCatEdit() {
+  catEditMode = !catEditMode;
+  document.getElementById('cat-btn').classList.toggle('on', catEditMode);
+  document.getElementById('cat-btn').textContent = catEditMode ? 'done' : 'edit';
+  document.getElementById('cat-add-row').classList.toggle('show', catEditMode);
+  render();
+}
+function delCat(i) {
+  if (!confirm('Remove "' + STATE.categories[i].name + '"?')) return;
+  STATE.categories.splice(i, 1);
+  saveData(); render();
+  showToast('Category removed');
+}
+function addCat() {
+  const name = document.getElementById('cat-new-name').value.trim();
+  if (!name) { showToast('Enter a category name', true); return; }
+  const emojiInput = document.getElementById('cat-new-emoji').value.trim();
+  const budgetDisp = parseFloat(document.getElementById('cat-new-bgt').value) || 0;
+  const emoji = emojiInput || getEmoji(name);
+  const palette = ['#3a7d5e','#b84040','#3a5c8a','#6b5090','#c07820','#7c5c38','#a04060','#2d7a8a','#5a7a3a','#8a6030'];
+  const color = palette[STATE.categories.length % palette.length];
+  STATE.categories.push({name, emoji, budgetSGD: toSGD(budgetDisp), color});
+  sortCats();
+  document.getElementById('cat-new-name').value  = '';
+  document.getElementById('cat-new-emoji').value = '';
+  document.getElementById('cat-new-bgt').value   = '';
+  saveData(); render();
+  // refresh tx add dropdown
+  refreshTxCatSel();
+  showToast('Category added');
+}
+
+// ── SAVINGS EDIT ──────────────────────────────────────────────
+function toggleSavEdit() {
+  savEditOpen = !savEditOpen;
+  document.getElementById('sav-edit-panel').style.display = savEditOpen ? 'block' : 'none';
+  document.getElementById('sav-btn').classList.toggle('on', savEditOpen);
+  document.getElementById('sav-btn').textContent = savEditOpen ? 'done' : 'edit targets';
+  if (savEditOpen) {
+    const s = STATE.savings;
+    document.getElementById('sav-edit-fields').innerHTML = `
+      <div class="ep-grid">
+        <div><div class="form-label">Month target (${curr})</div><input class="form-input" type="number" id="sav-mt" value="${fmtD(toDisp(s.monthTargetSGD))}" style="padding:8px 10px;font-size:14px"></div>
+        <div><div class="form-label">Month actual (${curr})</div><input class="form-input" type="number" id="sav-ma" value="${fmtD(toDisp(s.monthActualSGD))}" style="padding:8px 10px;font-size:14px"></div>
+        <div><div class="form-label">Year target (${curr})</div><input class="form-input" type="number" id="sav-yt" value="${fmtD(toDisp(s.yearTargetSGD))}" style="padding:8px 10px;font-size:14px"></div>
+        <div><div class="form-label">Year actual (${curr})</div><input class="form-input" type="number" id="sav-ya" value="${fmtD(toDisp(s.yearActualSGD))}" style="padding:8px 10px;font-size:14px"></div>
+      </div>
+      <button class="add-btn" style="width:100%;padding:9px;margin-top:2px" onclick="saveSavings()">Save</button>`;
+  }
+}
+function saveSavings() {
+  const s = STATE.savings;
+  const mt = parseFloat(document.getElementById('sav-mt').value);
+  const ma = parseFloat(document.getElementById('sav-ma').value);
+  const yt = parseFloat(document.getElementById('sav-yt').value);
+  const ya = parseFloat(document.getElementById('sav-ya').value);
+  if (!isNaN(mt)) s.monthTargetSGD = toSGD(mt);
+  if (!isNaN(ma)) s.monthActualSGD = toSGD(ma);
+  if (!isNaN(yt)) s.yearTargetSGD  = toSGD(yt);
+  if (!isNaN(ya)) s.yearActualSGD  = toSGD(ya);
+  toggleSavEdit();
+  saveData(); render();
+  showToast('Savings updated');
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function toggleTx() {
+  txOpen = !txOpen;
+  document.getElementById('tx-list').classList.toggle('open', txOpen);
+  document.getElementById('tx-icon').classList.toggle('open', txOpen);
+  document.getElementById('tx-add-row').classList.toggle('show', txOpen);
+  document.getElementById('filter-bar').style.display = txOpen ? 'flex' : 'none';
+  if (txOpen) {
+    document.getElementById('tx-new-date').value = new Date().toISOString().split('T')[0];
+    refreshTxCatSel();
+    refreshFilterCatSel();
+    renderTxList();
+  }
+}
+function refreshTxCatSel() {
+  const sel = document.getElementById('tx-new-cat');
+  sel.innerHTML = STATE.categories.map(c=>`<option value="${c.name}">${c.emoji||'📦'} ${c.name}</option>`).join('');
+}
+function delTx(i) {
+  STATE.txs.splice(i, 1);
+  saveData(); render();
+  showToast('Entry removed');
+}
+function addTx() {
+  const dispAmt = parseFloat(document.getElementById('tx-new-amt').value);
+  const cat     = document.getElementById('tx-new-cat').value;
+  const remark  = document.getElementById('tx-new-rmk').value.trim();
+  const dateVal = document.getElementById('tx-new-date').value;
+  if (!dispAmt || !dateVal) { showToast('Enter amount and date', true); return; }
+  const dateStr = dateVal.slice(5).replace('-','/');
+  STATE.txs.unshift({date:dateStr, amountSGD:toSGD(dispAmt), category:cat, remark, type:'expense'});
+  document.getElementById('tx-new-amt').value = '';
+  document.getElementById('tx-new-rmk').value = '';
+  saveData(); render();
+  showToast(`${curr} ${fmtD(dispAmt)} added`);
+}
+
+// ── LOG SHEET ─────────────────────────────────────────────────
+function openSheet() {
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-curr').value = curr;
+  updateSheetCatList();
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  setTimeout(() => document.getElementById('f-amt').focus(), 350);
+}
+function closeSheet() {
+  document.getElementById('backdrop').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+}
+function updateSheetCatList() {
+  document.getElementById('f-cat').innerHTML = STATE.categories.map(c=>
+    `<option value="${c.name}">${c.emoji||'📦'} ${c.name}</option>`
+  ).join('');
+}
+function setType(t) {
+  entryType = t;
+  document.getElementById('btn-exp').className = 'type-btn'+(t==='expense'?' exp':'');
+  document.getElementById('btn-inc').className = 'type-btn'+(t==='income' ?' inc':'');
+}
+function submitEntry() {
+  const dispAmt  = parseFloat(document.getElementById('f-amt').value);
+  const category = document.getElementById('f-cat').value;
+  const remark   = document.getElementById('f-rmk').value.trim();
+  const date     = document.getElementById('f-date').value;
+  const sheetCurr = document.getElementById('f-curr').value;
+  if (!dispAmt || !date) { document.getElementById('f-amt').focus(); return; }
+
+  const dateStr = date.slice(5).replace('-','/');
+  // convert to SGD based on sheet's selected currency
+  const amountSGD = sheetCurr === 'SGD' ? dispAmt : dispAmt / SGD_TO_HKD;
+
+  STATE.txs.unshift({date:dateStr, amountSGD, category, remark, type:entryType});
+  if (entryType === 'income') STATE.incomeSGD += amountSGD;
+
+  closeSheet();
+  saveData(); render();
+  showToast(`${sheetCurr} ${fmtD(dispAmt)} logged`);
+  document.getElementById('f-amt').value = '';
+  document.getElementById('f-rmk').value = '';
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+render();
 </script>
 </body>
 </html>
